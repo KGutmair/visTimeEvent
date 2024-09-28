@@ -266,7 +266,7 @@ km_grouped <-
     }
 
     km_result <- list(km_plot, median_table, surv_prob_table)
-    names(km_result) <- c("plot", "table", "survival probability")
+    names(km_result) <- c("plot", "table of median survival", "table of survival probability")
     km_result
   }
 
@@ -338,12 +338,11 @@ median_probability <-
       survdiff(Surv(time1, event1) ~ group1, data = data1, rho = type)
 
     # Table of median
-    tab <- as.data.frame(res$table)
-    tab <- tab %>%
+    median_tab <- as.data.frame(res$table)
+    median_tab <- median_tab %>%
       mutate_at(c("median", "0.95LCL", "0.95UCL"), function(x) format(round(x, 2), nsmall = 2)) %>%
       mutate(
         time = rep(as.character(time_survival), times = 2),
-        probability = round(res$surv, 0),
         pvalue = ifelse(res_test$pvalue >= 0.1,
           format(round(res_test$pvalue, 2), nsmall = 2),
           format(round(res_test$pvalue, 3), nsmall = 3)
@@ -351,10 +350,11 @@ median_probability <-
         p_value = ifelse(.data$pvalue < 0.001, "< 0.001", .data$pvalue),
         median_CI = paste0(.data$median, " (", .data$`0.95LCL`, " - ", .data$`0.95UCL`, ")")
       ) %>%
-      select(-c(.data$rmean, .data$`se(rmean)`, .data$probability, .data$`0.95LCL`,
+      select(-c(.data$rmean, .data$`se(rmean)`, .data$`0.95LCL`,
                 .data$`0.95UCL`, .data$pvalue))
 
 
-    res_list <- list(tab, survival_prob)
+    res_list <- list(median_tab, survival_prob)
+    names(res_list) <- c("table of median survival", "table of survival probability")
     res_list
   }

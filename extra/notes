@@ -2,7 +2,4 @@ where can I put all the additinal stuff like notes?
 
 
 - options for placement of the labels
-
-- testing, whether the median table and probability table are now referenced in the right manner
-- and maybe deleting some redundancies or making a better column selection
-- checking p-values, whether the log-rank test is used
+- testing the function
