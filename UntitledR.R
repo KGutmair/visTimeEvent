@@ -21,3 +21,4 @@ result <- km_grouped(data = b,
                      show_label = "median")
 
 result
+g <- waiver()

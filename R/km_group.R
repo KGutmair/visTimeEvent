@@ -101,10 +101,10 @@ km_grouped <-
     # Assertions for strings and numeric values
     assert_string(title)
     assert_string(endpoint)
-    assertNumeric(data[[time]], lower = 0, any.missing = FALSE)
-    assertNumeric(data[[event]], any.missing = FALSE)
-    assertSubset(data[[event]], choices = c(0, 1), empty.ok = FALSE)
-    assertNumeric(time_survival, lower = 0, any.missing = FALSE, len = 1)
+    assertNumeric(data[[time]], lower = 0, any.missing = TRUE)
+    assertNumeric(data[[event]], any.missing = TRUE)
+    assertSubset(data[[event]], choices = c(0, 1), empty.ok = TRUE)
+    assertNumeric(time_survival, lower = 0, any.missing = TRUE, len = 1)
 
 
     # Check if the number of colors matches the number of groups
@@ -124,11 +124,24 @@ km_grouped <-
       assert_numeric(y_lim, len = 2, any.missing = FALSE)
     }
 
+    is_waiver <- function(x) {
+      inherits(x, "waiver")
+    }
 
-    # Assertions for numeric x_breaks, y_breaks, and text sizes
-    # lapply(list(x_breaks, y_breaks),
-    #        function(x) assertNumeric(x, lower = 0, finite = TRUE, any.missing = FALSE, min.len = 2))
+    # Assertions for numeric x_breaks, y_breaks
+     assertNumeric(y_breaks, lower = 0, finite = TRUE, any.missing = FALSE, min.len = 2)
 
+     if(is_waiver (x_breaks) == FALSE) {
+       assertNumeric(x_breaks, lower = 0, finite = TRUE, any.missing = FALSE, min.len = 2)
+     }
+
+     if(is_waiver(x_title) == FALSE) {
+       assert_string(x_title)
+     }
+
+     if(is_waiver(y_title) == FALSE) {
+       assert_string(y_title)
+     }
 
     # Assert show_label is a valid option
     assert_character(show_label, any.missing = FALSE, max.len = 1)
