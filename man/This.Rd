@@ -23,7 +23,10 @@ km_grouped(
   colors = FALSE,
   show_label = "none",
   text_size_title = 15,
-  text_size = 12
+  text_size = 12,
+  show_p_values = TRUE,
+  p_placement = c(-0.2, -2),
+  legend_placement = c(0.6, 0.2)
 )
 }
 \arguments{
@@ -75,6 +78,13 @@ labels within the plot. Options are `FALSE` (default), `median`, or `probability
 \item{text_size_title}{A numeric value specifying the font size of the title.}
 
 \item{text_size}{A numeric value specifying the font size of the text elements.}
+
+\item{show_p_values}{logical, indicating whether the p-values be displayed in the plot?. Default = `TRUE`}
+
+\item{p_placement}{numeric vector of length 2 indicating the position of the the p-value.
+The first number correspondend to the hjust placement, the second to the vjust placement}
+
+\item{legend_placement}{numeric vector of length 2 indicating the legend position. Default is c(0.6, 0.2).}
 }
 \value{
 list containing

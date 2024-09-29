@@ -47,6 +47,11 @@
 #'                   labels within the plot. Options are `FALSE` (default), `median`, or `probability`.
 #' @param text_size_title A numeric value specifying the font size of the title.
 #' @param text_size A numeric value specifying the font size of the text elements.
+#' @param show_p_values logical, indicating whether the p-values be displayed in the plot?. Default = `TRUE`
+
+#' @param p_placement numeric vector of length 2 indicating the position of the the p-value.
+#'                    The first number correspondend to the hjust placement, the second to the vjust placement
+#' @param legend_placement numeric vector of length 2 indicating the legend position. Default is c(0.6, 0.2).
 #'
 #' @return list containing
 #' a, the ggplot object of the Kaplan-Meier plot
@@ -85,7 +90,10 @@ km_grouped <-
            # otpions: median, probability
            show_label = "none",
            text_size_title = 15,
-           text_size = 12) {
+           text_size = 12,
+           show_p_values = TRUE,
+           p_placement = c(-0.2, -2),
+           legend_placement = c(0.6, 0.2)) {
 
 
     # Assert data frame structure
@@ -105,6 +113,8 @@ km_grouped <-
     assertNumeric(data[[event]], any.missing = TRUE)
     assertSubset(data[[event]], choices = c(0, 1), empty.ok = TRUE)
     assertNumeric(time_survival, lower = 0, any.missing = TRUE, len = 1)
+    assertNumeric(p_placement, any.missing = FALSE, len = 2)
+    assertNumeric(legend_placement, any.missing = FALSE, len = 2)
 
 
     # Check if the number of colors matches the number of groups
@@ -203,15 +213,6 @@ km_grouped <-
         y = y_title
       ) +
       ggtitle(title) +
-      annotate(
-        geom = "text",
-        x = -Inf,
-        y = -Inf,
-        hjust = -.2,
-        vjust = -2,
-        label = paste0("p = ", median_table$p_value[1]),
-        color = "black", size = 5
-      ) +
       coord_cartesian(xlim = x_lim, ylim = y_lim) +
       scale_y_continuous(
         labels = scales::percent,
@@ -220,7 +221,7 @@ km_grouped <-
       scale_x_continuous(breaks = x_breaks) +
       theme(
         plot.title = element_text(size = text_size_title),
-        legend.position = c(0.6, 0.2), legend.key.size = unit(0.7, "cm"),
+        legend.position = legend_placement, legend.key.size = unit(0.7, "cm"),
         legend.background = element_rect(fill = alpha("blue", 0)),
         axis.text.x = element_text(
           color = "black",
@@ -236,6 +237,19 @@ km_grouped <-
       ) +
       add_censor_mark() +
       add_risktable()
+
+    if(show_p_values == TRUE) {
+    km_plot <- km_plot +
+      annotate(
+        geom = "text",
+        x = -Inf,
+        y = -Inf,
+        hjust = p_placement[1],
+        vjust = p_placement[2],
+        label = paste0("p = ", median_table$p_value[1]),
+        color = "black", size = 5
+      )
+    }
 
     # setting labels, if desired
     if (show_label == "probability") {
