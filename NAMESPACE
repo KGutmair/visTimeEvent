@@ -2,6 +2,7 @@
 
 export(km_grouped)
 export(km_grouped_weighted)
+export(km_single)
 import(adjustedCurves)
 import(checkmate)
 import(ggplot2)

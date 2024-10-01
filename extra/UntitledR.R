@@ -20,8 +20,21 @@ result <- km_grouped(data = b,
                      unit = "days",
                      show_label = "median")
 
-f <- NULL
-!is.null(f)
-if(!is.null(f) == TRUE) {
-  print("do sth fancy")
-}
+
+
+library(survival)
+library(dplyr)
+test_dat <- survival::pbc
+test_dat <- test_dat %>%
+  mutate(status1 = ifelse(status == 2, 1, 0),
+         trt = ifelse(trt == 1, "treatment", "placebo")) %>%
+  filter(!is.na(trt))
+
+km_single(data = test_dat,
+                     time = "time",
+                     event = "status1",
+                     title = "Test",
+                     time_survival = 50,
+                     unit = "days",
+                     show_label = "none",
+          colors = "blue")

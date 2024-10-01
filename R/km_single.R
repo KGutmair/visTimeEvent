@@ -1,48 +1,13 @@
-#' Plotting Kaplan-Meier curves stratified by groups
+#' Plotting Kaplan-Meier curves for one group
 #'
-#'@description This function is plotting Kaplan-Meier curves stratified by groups.
+#'@describtion This function is plotting Kaplan-Meier curves stratified by groups.
 #'            the `survfit2()` function is used to plot the Kaplan-Meier curves.
 #'            Additionally, p-values, median survival and probability of survival
 #'            after a certain time is computed and added as information to the plot,
 #'            if desired.
 #'
-#'
-#' @param data A `data.frame` containing the necessary columns: time, event, and group.
-#' @param time A character string specifying the column name of the numeric time
-#'             variable for the time-to-event endpoint.
-#' @param event A character string specifying the column name of the event indicator.
-#'              Should be a numeric variable where 1 represents an event, and 0
-#'              represents no event or right-censoring.
-#' @param group A character string specifying the grouping variable used for stratifying
-#'              the Kaplan-Meier curves.
-#' @param title A character string providing the title for the Kaplan-Meier plot.
-#' @param time_survival A numeric value representing the time point at which the
-#'                      event pobability is calculated. Default is 1.
-#' @param unit A character string indicating the unit for `time_survival` (e.g., "months").
-#'             Default is "months".
-#' @param test A character string specifying the type of statistical test for
-#'             comparing survival curves. Options are `log-rank` or `wilcoxon`. Default is `log-rank`.
-#' @param x_title A character string specifying the label for the x-axis.
-#' @param y_title A character string specifying the label for the y-axis.
-#' @param endpoint A character string providing the name of the endpoint.
-#' @param x_lim A numeric vector of length two defining the limits of the x-axis.
-#' @param y_lim A numeric vector of length two defining the limits of the y-axis.
-#'              Default is `c(0, 1)`.
-#' @param x_breaks A numeric vector specifying the break points for the x-axis labels.
-#' @param y_breaks A numeric vector specifying the break points for the y-axis labels.
-#'                 Default is from 0 to 1 with steps of 0.2.
-#' @param colors A character vector specifying the colors for the curves. If not provided,
-#'               random colors will be assigned.
-#' @param show_label A logical or character value indicating whether to display median survival time of event probabilites
-#'                   labels within the plot. Options are `FALSE` (default), `median`, or `probability`.
-#' @param text_size_title A numeric value specifying the font size of the title.
-#' @param text_size A numeric value specifying the font size of the text elements.
-#' @param show_p_values logical, indicating whether the p-values be displayed in the plot?. Default = `TRUE`
+#' @inheritParams km_grouped
 
-#' @param p_placement numeric vector of length 2 indicating the position of the the p-value.
-#'                    The first number correspondend to the hjust placement, the second to the vjust placement
-#' @param legend_placement numeric vector of length 2 indicating the legend position. Default is c(0.6, 0.2).
-#'
 #' @return list containing
 #' a, the ggplot object of the Kaplan-Meier plot
 #' b, a data frame containing median survival + CI,
@@ -60,15 +25,13 @@
 #' @importFrom scales percent
 
 
-km_grouped <-
+km_single <-
   function(data,
            time,
            event,
-           group,
            title = "",
            time_survival = 1,
            unit = "months",
-           test = "log-rank",
            x_title = waiver(),
            y_title = waiver(),
            endpoint = "",
@@ -81,16 +44,14 @@ km_grouped <-
            show_label = "none",
            text_size_title = 15,
            text_size = 12,
-           show_p_values = TRUE,
-           p_placement = c(-0.2, -2),
-           legend_placement = c(0.6, 0.2)) {
+           legend_placement = c(-0.5, -2)) {
 
 
     # Assert data frame structure
     assert_data_frame(data, min.rows = 1, min.cols = 1)
 
     # Check that time, event, and group are valid columns in the data
-    variables <- c(time, event, group)
+    variables <- c(time, event)
     lapply(variables, function(var) assert_vector(var, any.missing = FALSE, len = 1))
     if (any(!variables %in% colnames(data))) {
       stop("At least one of the variable names cannot be found in the data.")
@@ -103,15 +64,7 @@ km_grouped <-
     assertNumeric(data[[event]], any.missing = TRUE)
     assertSubset(data[[event]], choices = c(0, 1), empty.ok = TRUE)
     assertNumeric(time_survival, lower = 0, any.missing = TRUE, len = 1)
-    assertNumeric(p_placement, any.missing = FALSE, len = 2)
     assertNumeric(legend_placement, any.missing = FALSE, len = 2)
-
-
-    # Check if the number of colors matches the number of groups
-    if (!identical(colors, FALSE) && length(colors) != length(unique(data[[group]]))) {
-      warning("Number of colors does not correspond to the number of groups.")
-    }
-
 
 
     # Assert x_lim and y_lim must have exactly two values
@@ -152,41 +105,33 @@ km_grouped <-
            function(x) assertNumeric(x, lower = 0, len = 1, any.missing = FALSE))
 
     print("Following options were chosen: ")
-    print(paste0("- significance test: ", test))
     print(paste0("- time-to-event probability of ", time_survival, " ", unit))
 
-    group_sym <- sym(group)
     time_sym <- sym(time)
     event_sym <- sym(event)
 
     data1 <- data %>%
       rename(
-        group1 = !!group_sym,
         time1 = !!time_sym,
         event1 = !!event_sym
       )
 
     # specifying colors, if they were not specified in the parameters
     if (is.logical(colors)) {
-      n <- length(unique(data1$group1))
-      colors <- colorRamps::primary.colors(n + 1)[-1]
+      colors <- colorRamps::primary.colors(1)
     }
 
     # calling the function whose output are a data frame with
     # the median survival times and survival probabilities + its CIs
     km_table1 <-
-      median_probability(
+      median_probability_single(
         data = data,
         time = time,
         event = event,
-        group = group,
-        time_survival = time_survival,
-        test = test
-      )
+        time_survival = time_survival )
 
     # table containing the information for median for every treatment arm
     median_table <- km_table1[[1]]
-    median_table$median <- format(round(as.numeric(median_table$median), 1), nsmall = 1)
     # table containing the information to xy% probability
     surv_prob_table <- km_table1[[2]]
 
@@ -194,10 +139,10 @@ km_grouped <-
 
     # plotting the survival curves
     km_plot <-
-      survfit2(Surv(time = time1, event = event1) ~ group1,
+      survfit2(Surv(time = time1, event = event1) ~ 1,
                data = data1
       ) %>%
-      ggsurvfit() +
+      ggsurvfit(color = colors) +
       labs(
         x = x_title,
         y = y_title
@@ -211,8 +156,6 @@ km_grouped <-
       scale_x_continuous(breaks = x_breaks) +
       theme(
         plot.title = element_text(size = text_size_title),
-        legend.position = legend_placement, legend.key.size = unit(0.7, "cm"),
-        legend.background = element_rect(fill = alpha("blue", 0)),
         axis.text.x = element_text(
           color = "black",
           size = text_size
@@ -225,48 +168,41 @@ km_grouped <-
         axis.title.y = element_text(color = "black", size = text_size),
         legend.text = element_text(size = text_size)
       ) +
-      add_censor_mark() +
+      add_censor_mark(color = colors) +
       add_risktable()
 
-    if(show_p_values == TRUE) {
+
+    # setting labels, if desired
+    if (show_label == "probability") {
+        label_vec <- paste(time_survival, unit, endpoint, " probability  = ",
+                           surv_prob_table$surv_prob, sep = " ")
+
       km_plot <- km_plot +
         annotate(
           geom = "text",
           x = -Inf,
           y = -Inf,
-          hjust = p_placement[1],
-          vjust = p_placement[2],
-          label = paste0("p = ", median_table$p_value[1]),
+          hjust = legend_placement[1],
+          vjust = legend_placement[2],
+          # label = paste0(endpoint,  " 1 year probability  = ", prob),
+          label = label_vec,
           color = "black", size = 5
         )
-    }
-
-    # setting labels, if desired
-    if (show_label == "probability") {
-      label_vec <- c()
-      for (i in seq_len(nrow(surv_prob_table))) {
-        label_vec[i] <- paste(surv_prob_table$names[i], time_survival, unit, endpoint, " probability  = ", surv_prob_table$surv_prob[i], sep = " ")
-      }
-      km_plot <- km_plot +
-        scale_color_manual(
-          values = colors,
-          labels = label_vec
-        )
     } else if (show_label == "median") {
-      label_vec <- c()
-      for (i in seq_len(nrow(median_table))) {
-        label_vec[i] <- paste(surv_prob_table$names[i], " median  = ", median_table$median_CI[i], sep = " ")
-      }
+      label_vec <- paste( " median  = ", median_table$median_CI, sep = " ")
       km_plot <- km_plot +
-        scale_color_manual(
-          values = colors,
-          labels = label_vec
+        annotate(
+          geom = "text",
+          x = -Inf,
+          y = -Inf,
+          hjust = legend_placement[1],
+          vjust = legend_placement[2],
+          # label = paste0(endpoint,  " 1 year probability  = ", prob),
+          label = label_vec,
+          color = "black", size = 5
         )
     } else {
-      km_plot <- km_plot +
-        scale_color_manual(
-          values = colors
-        )
+      km_plot
     }
 
     km_result <- list(km_plot, median_table, surv_prob_table)
@@ -296,35 +232,33 @@ km_grouped <-
 #'
 #'
 #'
-median_probability <-
+median_probability_single <-
   function(data,
            time,
            event,
-           group,
            # 5 year- probbaility of survival
-           time_survival = 1,
-           test = "log-rank") {
+           time_survival = 1) {
 
 
-    group_sym <- sym(group)
     time_sym <- sym(time)
     event_sym <- sym(event)
     data1 <- data %>%
       rename(
-        group1 = !!group_sym,
         time1 = !!time_sym,
         event1 = !!event_sym
       )
 
     res <-
-      summary(survfit(Surv(time = time1, event = event1) ~ group1, data = data1),
+      summary(survfit(Surv(time = time1, event = event1) ~ 1, data = data1),
               times = time_survival, extend = TRUE, conf.type = "arcsin"
       )
+
+
 
     # table of survival probabilities
     survival_prob <- data.frame(res$time, res$n.risk, res$n.event, res$surv, res$lower, res$upper)
     survival_prob <- survival_prob %>%
-      mutate(names = unique(data1$group1)) %>%
+      mutate(names = "whole group") %>%
       mutate(
         survival_prop = round(.data$res.surv * 100, 0),
         LCI = round(.data$res.lower * 100, 0),
@@ -334,28 +268,17 @@ median_probability <-
       select(-c(.data$res.surv, .data$res.lower, .data$res.upper)) %>%
       relocate(.data$names, .data$res.time, .data$res.n.risk, .data$res.n.event, .data$surv_prob)
 
-    type <- switch(test,
-                   "log-rank" = 0,
-                   "wilcoxon" = 1
-    )
-    res_test <-
-      survdiff(Surv(time1, event1) ~ group1, data = data1, rho = type)
 
     # Table of median
-    median_tab <- as.data.frame(res$table)
+    median_tab <- as.data.frame(t(res$table))
     median_tab <- median_tab %>%
       mutate_at(c("median", "0.95LCL", "0.95UCL"), function(x) format(round(x, 2), nsmall = 2)) %>%
       mutate(
-        time = rep(as.character(time_survival), times = 2),
-        pvalue = ifelse(res_test$pvalue >= 0.1,
-                        format(round(res_test$pvalue, 2), nsmall = 2),
-                        format(round(res_test$pvalue, 3), nsmall = 3)
-        ),
-        p_value = ifelse(.data$pvalue < 0.001, "< 0.001", .data$pvalue),
+        time = rep(as.character(time_survival), times = 1),
         median_CI = paste0(.data$median, " (", .data$`0.95LCL`, " - ", .data$`0.95UCL`, ")")
       ) %>%
       select(-c(.data$rmean, .data$`se(rmean)`, .data$`0.95LCL`,
-                .data$`0.95UCL`, .data$pvalue))
+                .data$`0.95UCL`))
 
 
     res_list <- list(median_tab, survival_prob)

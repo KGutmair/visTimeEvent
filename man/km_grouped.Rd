@@ -93,14 +93,9 @@ b, a data frame containing median survival + CI,
 c, a data frame containing the event probability after a certain time point + CI
 }
 \description{
-Plotting Kaplan-Meier curves stratified by groups
+This function is plotting Kaplan-Meier curves stratified by groups.
+           the `survfit2()` function is used to plot the Kaplan-Meier curves.
+           Additionally, p-values, median survival and probability of survival
+           after a certain time is computed and added as information to the plot,
+           if desired.
 }
-\section{Functions}{
-\itemize{
-\item \code{km_grouped()}: function is plotting Kaplan-Meier curves stratified by groups.
-the `survfit2()` function is used to plot the Kaplan-Meier curves.
-Additionally, p-values, median survival and probability of survival
-after a certain time is computed and added as information to the plot,
-if desired.
-
-}}
