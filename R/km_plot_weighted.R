@@ -238,15 +238,16 @@ km_grouped_weighted <- function(data,
 #' @param show_weighted_n Logical, default: TRUE. Should the weighted or unweighted
 #' number of observations at risk be displayed?
 #' @param weight_col Character string indicating the column name containing the weights.
-#' @param text_size
-#' @param text_alpha
-#' @param text_color
-#' @param text_family
-#' @param text_fontface
-#' @param color_groups
-#' @param reverse_order
-#' @param custom_colors
-#' @param vjust
+#' @param text_size a number inidicating the font size of the text
+#' @param text_alpha a number inidicating the font size of the text
+#' @param text_color a character string indicating the color of the text in the risk table
+#' @param text_family a character string specifying the text family
+#' @param text_fontface a character string specifying the fontface
+#' @param color_groups logical TRUE/FALSE, default is TRUE
+#' @param reverse_order should the risk table be printed in the reversed order,
+#' logical TRUE/FALSE, default is TRUE
+#' @param custom_colors character string specifying the colors
+#' @param vjust numeric value
 #'
 #' @return a ggplot object with the risk table
 #' @noRd

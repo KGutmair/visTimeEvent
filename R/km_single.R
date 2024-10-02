@@ -1,6 +1,7 @@
 #' Plotting Kaplan-Meier curves for one group
 #'
-#'@describtion This function is plotting Kaplan-Meier curves stratified by groups.
+#'@description
+#'This function is plotting Kaplan-Meier curves stratified by groups.
 #'            the `survfit2()` function is used to plot the Kaplan-Meier curves.
 #'            Additionally, p-values, median survival and probability of survival
 #'            after a certain time is computed and added as information to the plot,
