@@ -127,7 +127,6 @@ km_grouped_weighted <- function(data,
 
   # specifying colors, if they were not specified in the parameters
   if (is.logical(color_curves)) {
-    require(colorRamps)
     n <- length(unique(data1$group1))
     color_curves <- primary.colors(n + 1)[-1]
   }

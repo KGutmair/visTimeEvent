@@ -1,6 +1,9 @@
-
-
 #' Cumulative incidence plot for comepeting risks for one group
+#'
+#' @description
+#' This function plots the cumulative incidence curves for two competing events.
+#' Dispalyed are both curves (for both competing events) as well as optionally
+#' median or probability for a certain time points plotted within the plot.
 #'
 #'
 #' @param time A character string specifying the column name of the numeric time
@@ -20,7 +23,7 @@
 #' @importFrom ggsurvfit ggcuminc
 #'
 #'
-comp_risk <-
+comp_risk_single <-
   function(data,
            time,
            event,
@@ -40,8 +43,7 @@ comp_risk <-
            text_size_title = 15,
            text_size = 12,
            legend_placement = c(0.48, 0.8),
-           time_vec_prob) {
-
+           time_vec_prob = c(1, 2, 3)) {
     time_sym <- sym(time)
     event_sym <- sym(event)
     data1 <- data %>%
@@ -56,7 +58,7 @@ comp_risk <-
 
     # Creation of survival object and the cumulative incidence for a given timepoint
     surv_object <- tidycmprsk::cuminc(Surv(time1, event1) ~ 1,
-                                      data = data1, conf.type = "arcsin"
+      data = data1, conf.type = "arcsin"
     )
     # adding the outcome (competing events) as factor again, becaus the factor coding is
     # deleted when computing the cuminc object
@@ -71,6 +73,17 @@ comp_risk <-
       )
 
     df_surv_prob_tidy <- df_surv_prob$tidy
+
+    # median probability
+    median_table <- surv_object$tidy %>%
+      group_by(.data$outcome) %>%
+      filter(.data$estimate >= 0.5) %>%
+      slice_head() %>%
+      select(.data$outcome, .data$time) %>%
+      arrange(factor(.data$outcome, levels = cr))
+
+
+
 
     options("ggsurvfit.switch-color-linetype" = TRUE)
     # specifying colors, if they were not specified in the parameters
@@ -113,32 +126,32 @@ comp_risk <-
 
     # adding the labels (median cumulative incidence or probability, if desired)
 
-
-      if (show_label == "probability") {
-        plot <- plot +
-          scale_color_manual(
-            values = c("darkgreen", "deepskyblue3"),
-            # labeling both competing risks
-            labels = c(
-              paste0(cr[1], ": 1 year ", df_surv_prob_tidy[1, 4]),
-              paste0(cr[2], ": 1 year ", df_surv_prob_tidy[2, 4])
-            )
+    if (show_label == "probability") {
+      plot <- plot +
+        scale_color_manual(
+          values = colors,
+          # labeling both competing risks
+          labels = c(
+            paste0(cr[1], ": ", time_survival, " ", df_surv_prob_tidy[1, 4]),
+            paste0(cr[2], ": ", time_survival, " ", df_surv_prob_tidy[2, 4])
           )
-      } else if (show_label == "median") {
-        plot <- plot +
-          scale_color_manual(
-            values = c("darkgreen", "deepskyblue3"),
-            # labeling both competing risks
-            labels = c(
-              paste0(cr[1], ": 1 year ", df_surv_prob_tidy[1, 4]),
-              paste0(cr[2], ": 1 year ", df_surv_prob_tidy[2, 4])))
-      } else {
-        plot <- plot +
-          scale_color_manual(
-            values = colors
+        )
+    } else if (show_label == "median") {
+      plot <- plot +
+        scale_color_manual(
+          values = colors,
+          # labeling both competing risks
+          labels = c(
+            paste0(median_table$outcome[1], ": median survival ", median_table$time[1]),
+            paste0(median_table$outcome[2], ": median survival ", median_table$time[2])
           )
-
-      }
+        )
+    } else {
+      plot <- plot +
+        scale_color_manual(
+          values = colors
+        )
+    }
 
     tab_cum_incidence_prob <- surv_object %>%
       tbl_cuminc(
@@ -150,7 +163,7 @@ comp_risk <-
       add_nevent(location = c("label", "level")) %>%
       add_n(location = c("label", "level"))
 
-    result <- list(plot, tab_cum_incidence_prob)
-    names(result) <- c("plot", "cumulative incidence probability")
+    result <- list(plot, tab_cum_incidence_prob, median_table)
+    names(result) <- c("plot", "cumulative incidence probability", "median table")
     result
   }
