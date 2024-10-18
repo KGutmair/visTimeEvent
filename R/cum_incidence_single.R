@@ -21,6 +21,7 @@
 #' @importFrom colorRamps primary.colors
 #' @import ggplot2
 #' @importFrom ggsurvfit ggcuminc
+#' @importFrom survival Surv
 #'
 #'
 comp_risk_single <-
@@ -32,7 +33,6 @@ comp_risk_single <-
            unit = "months",
            x_title = waiver(),
            y_title = waiver(),
-           endpoint = "",
            x_lim = NULL,
            y_lim = c(0, 1),
            x_breaks = waiver(),
@@ -78,6 +78,7 @@ comp_risk_single <-
     median_table <- surv_object$tidy %>%
       group_by(.data$outcome) %>%
       filter(.data$estimate >= 0.5) %>%
+      group_by(.data$outcome) %>%
       slice_head() %>%
       select(.data$outcome, .data$time) %>%
       arrange(factor(.data$outcome, levels = cr))
@@ -142,8 +143,8 @@ comp_risk_single <-
           values = colors,
           # labeling both competing risks
           labels = c(
-            paste0(median_table$outcome[1], ": median survival ", median_table$time[1]),
-            paste0(median_table$outcome[2], ": median survival ", median_table$time[2])
+            paste0(median_table$outcome[1], ": median survival ", round(median_table$time[1], 2)),
+            paste0(median_table$outcome[2], ": median survival ", round(median_table$time[2], 2))
           )
         )
     } else {

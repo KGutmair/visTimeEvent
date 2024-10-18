@@ -14,9 +14,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
-library(visTimeEvent)
-```
 
 # Description
 
@@ -41,3 +38,93 @@ Following functions are available:
 
 # Examples
 
+```{r setup}
+library(visTimeEvent)
+library(survival)
+library(dplyr)
+```
+
+
+## Kaplan-Meier curves
+
+```{r example}
+test_dat <- survival::pbc
+test_dat <- test_dat %>%
+  mutate(
+    status_death = ifelse(status == 2, 1, 0),
+    time = time / 365,
+    trt = as.factor(ifelse(trt == 1, "treatment", "placebo")),
+    trt_num = ifelse(trt == "treatment", 1, 0),
+    status = as.factor(status)
+  ) %>%
+  filter(!is.na(trt))
+```
+
+What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+
+```{r KM-plot, one group, fig.width=7}
+plot_km <- km_single(
+  data = test_dat,
+  time = "time",
+  event = "status_death",
+  title = "Kaplan-Meier curves for one group",
+  unit = "years",
+  endpoint = "OS",
+  colors = "darkblue",
+  show_label = "median"
+)
+plot_km[[1]]
+```
+
+```{r KM-plot, two groups, fig.width=7, fig.height= 5}
+plot_km1 <- km_grouped(
+  data = test_dat,
+  time = "time",
+  event = "status_death",
+  group = "trt",
+  time_survival = 6,
+  test = "wilcoxon",
+  title = "Kaplan-Meier curves for two groups",
+  unit = "years",
+  endpoint = "OS",
+  colors = c("darkblue", "darkgreen"),
+  show_label = "probability"
+)
+
+plot_km1[[1]]
+```
+
+## Cumulative incidence curves
+
+Plotted are both competing events
+```{r cumulative incidence plot, one group, fig.width=7}
+plot_cum <- comp_risk_single(
+  data = test_dat,
+  time = "time",
+  event = "status",
+  title = "Competing risk of a single group",
+  unit = "years",
+  colors = c("darkred", "darkblue"),
+  show_label = "probability",
+  time_survival = 8
+)
+
+plot_cum[[1]]
+```
+
+
+Plotted are the competing event labeled with 1
+```{r cumulative incidence plot, two groups, fig.width=7, fig.height=5}
+plot_cum1 <- comp_risk_grouped(
+  data = test_dat,
+  time = "time",
+  event = "status",
+  group = "trt",
+  title = "Competing risk of two group",
+  unit = "years",
+  colors = c("darkgreen", "deepskyblue3"),
+  show_label = "probability",
+  time_survival = 8
+)
+plot_cum1[[1]]
+```

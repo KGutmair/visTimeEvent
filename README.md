@@ -64,8 +64,71 @@ library(visTimeEvent)
 #> Registered S3 method overwritten by 'mosaic':
 #>   method                           from   
 #>   fortify.SpatialPolygonsDataFrame ggplot2
-## basic example code
+library(dplyr)
+library(survival)
+
+test_dat <- survival::pbc
+test_dat <- test_dat %>%
+  mutate(status_death = ifelse(status == 2, 1, 0),
+         time = time/365,
+         trt = as.factor(ifelse(trt == 1, "treatment", "placebo")),
+         trt_num = ifelse(trt == "treatment", 1, 0),
+         status = as.factor(status)) %>%
+  filter(!is.na(trt))
 ```
 
 What is special about using `README.Rmd` instead of just `README.md`?
 You can include R chunks like so:
+
+``` r
+plot_km <- km_single(data = test_dat,
+          time = "time",
+          event = "status_death",
+          title = "Kaplan-Meier curves for one group",
+          unit = "years",
+          endpoint = "OS",
+          colors = "darkblue",
+          show_label = "median")
+#> [1] "Following options were chosen: "
+#> [1] "- time-to-event probability of 1 years"
+plot_km[[1]]
+```
+
+<img src="man/figures/README-KM-plot, one group-1.png" width="100%" />
+
+``` r
+plot_km1<- km_grouped(data = test_dat,
+          time = "time",
+          event = "status_death",
+          group = "trt",
+          time_survival = 6,
+          test = "wilcoxon",
+          title = "Kaplan-Meier curves for two groups",
+          unit = "years",
+          endpoint = "OS",
+          colors = c("darkblue", "darkgreen"),
+          show_label = "probability")
+#> [1] "Following options were chosen: "
+#> [1] "- significance test: wilcoxon"
+#> [1] "- time-to-event probability of 6 years"
+
+plot_km1[[1]]
+```
+
+<img src="man/figures/README-KM-plot, two groups-1.png" width="100%" />
+
+``` r
+plot_cum <- comp_risk_single(data = test_dat,
+                 time = "time",
+                 event = "status",
+                 title = "Competing risk of a single group",
+                 unit = "years",
+                 colors = c("darkred", "darkblue"),
+                 show_label = "probability",
+                 time_survival = 8)
+#> [1] "1" "2"
+
+plot_cum[[1]]
+```
+
+<img src="man/figures/README-cumulative incidence plot, one group-1.png" width="100%" />

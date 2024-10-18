@@ -28,6 +28,7 @@
 #' @importFrom colorRamps primary.colors
 #' @import ggplot2
 #' @importFrom rlang .data
+#'  @importFrom scales percent
 #'
 km_grouped_weighted <- function(data,
                                 time,
@@ -74,7 +75,7 @@ km_grouped_weighted <- function(data,
     ev_time = "time1",
     event = "event1",
     method = "iptw_km",
-    treatment_model = data[[weight_col]],
+    treatment_model = data1[[weight_col]],
     conf_int = TRUE
   )
 
@@ -254,7 +255,7 @@ km_grouped_weighted <- function(data,
 #' @import ggplot2
 #'
 plot_risk_table.groups <- function(data,
-                                   x_breaks,
+                                   x_breaks = waiver(),
                                    x_lim,
                                    variable,
                                    ev_time,

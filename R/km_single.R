@@ -190,7 +190,7 @@ km_single <-
           color = "black", size = 5
         )
     } else if (show_label == "median") {
-      label_vec <- paste( " median  = ", median_table$median_CI, sep = " ")
+      label_vec <- paste( " median ", endpoint, ": ", median_table$median_CI, sep = " ")
       km_plot <- km_plot +
         annotate(
           geom = "text",

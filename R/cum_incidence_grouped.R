@@ -37,6 +37,8 @@ comp_risk_grouped <- function(data,
                               time_survival = 1,
                               unit = "months",
                               endpoint = "",
+                              x_lim = NULL,
+                              y_lim = c(0, 1),
                               x_breaks = waiver(),
                               y_breaks = seq(0, 1, by = 0.2),
                               colors = FALSE,
@@ -49,7 +51,7 @@ comp_risk_grouped <- function(data,
   # Creation of survival object and the cumulative incidence for a given timepoint
 
   formula <- as.formula(paste0("Surv(", time, ", ", event, ") ~ ", group))
-
+print(formula)
   surv_object <- tidycmprsk::cuminc(
     formula = formula,
     data = data, conf.type = "arcsin"
@@ -67,7 +69,7 @@ comp_risk_grouped <- function(data,
   tbl <-
     surv_object %>%
     tbl_cuminc(
-      times = time_survival, label_header = "**Months {time}**",
+      times = time_survival, label_header = unit,
       outcomes = cr
     )
 
@@ -123,7 +125,7 @@ comp_risk_grouped <- function(data,
       label = paste0("p = ", p_value),
       color = "black", size = 5
     ) +
-    coord_cartesian(xlim = c(0, 90), ylim = c(0, 1)) +
+    coord_cartesian(xlim = x_lim, ylim = y_lim) +
     scale_y_continuous(
       labels = scales::percent,
       breaks = y_breaks
@@ -151,9 +153,9 @@ comp_risk_grouped <- function(data,
   # adding the labels (median cumulative incidence or probability, if desired)
 
   if (show_label == "probability") {
-    plot <- plot +
+    cuminc_plot <- cuminc_plot +
       scale_color_manual(
-        values = c("darkgreen", "deepskyblue3"),
+        values = colors,
         # labeling both competing risks
         labels = c(
           paste0(table_surv_prob$strata[2], " ", endpoint, ":", time_survival, " ", unit, table_surv_prob[2, 5]),
@@ -161,9 +163,9 @@ comp_risk_grouped <- function(data,
         )
       )
   } else if (show_label == "median") {
-    plot <- plot +
+    cuminc_plot <- cuminc_plot +
       scale_color_manual(
-        values = c("darkgreen", "deepskyblue3"),
+        values = colors,
         # labeling both competing risks
         labels = c(
           paste0(median_table$outcome[2], ": median survival ", median_table$time[2]),
@@ -171,7 +173,7 @@ comp_risk_grouped <- function(data,
         )
       )
   } else {
-    plot <- plot +
+    cuminc_plot <- cuminc_plot +
       scale_color_manual(
         values = colors
       )
@@ -179,6 +181,6 @@ comp_risk_grouped <- function(data,
 
 
 
-  res_list <- list("plot" = cuminc_plot, "prob" = table_surv_prob, "median" = median_table)
+  res_list <- list("plot" = cuminc_plot, "probabilities" = table_surv_prob, "median" = median_table)
   res_list
 }

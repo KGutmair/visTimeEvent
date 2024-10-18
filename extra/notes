@@ -4,3 +4,8 @@ where can I put all the additinal stuff like notes?
 - options for placement of the labels
 - testing the function
 - in cuminc: I changed the plotting mechanism: see MULTIPLY project
+- I need a solution for waiver(), just adding some breaks manually do not woek either
+- cumulative icnidence single group: when median is not reached for one or more competing events,
+  then NA is printed in the plot
+- cumulative incidence curve single group: statt 1 und 2 soll wirklich der Name der competing risk geplotted sein
+- cumulative incidence curve two groups: problems with colors when running everyting
