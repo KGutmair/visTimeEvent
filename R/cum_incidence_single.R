@@ -7,7 +7,9 @@
 #'
 #'
 #' @param time A character string specifying the column name of the numeric time
-#'             variable for the time-to-event endpoint. 0 = cebsored.
+#'             variable for the time-to-event endpoint. 0 = censored.
+#' @param comp_risk_labels a character vector of the same length as the number of competing
+#'                         risks with its names (e.g. death due to cancer, death due to corona)
 #' @inheritParams km_grouped
 #' @param time_vec_prob numeric vector containing time points, on which one wants to display
 #'                      the probability of the incidence.
@@ -43,7 +45,8 @@ comp_risk_single <-
            text_size_title = 15,
            text_size = 12,
            legend_placement = c(0.48, 0.8),
-           time_vec_prob = c(1, 2, 3)) {
+           time_vec_prob = c(1, 2, 3),
+           comp_risk_labels = NULL) {
     time_sym <- sym(time)
     event_sym <- sym(event)
     data1 <- data %>%
@@ -51,9 +54,15 @@ comp_risk_single <-
         time1 = !!time_sym,
         event1 = !!event_sym
       )
+if(!is.null(comp_risk_labels) == TRUE) {
+  data1$event1 <- factor(data1$event1, labels = comp_risk_labels)
+}
 
     cr <- levels(data1$event1)[-1]
     print(cr)
+
+    helper_df <- data.frame(outcome = cr)
+
 
 
     # Creation of survival object and the cumulative incidence for a given timepoint
@@ -83,6 +92,7 @@ comp_risk_single <-
       select(.data$outcome, .data$time) %>%
       arrange(factor(.data$outcome, levels = cr))
 
+median_table <- merge(helper_df, median_table, by = "outcome", all.x = TRUE)
 
 
 
@@ -166,5 +176,6 @@ comp_risk_single <-
 
     result <- list(plot, tab_cum_incidence_prob, median_table)
     names(result) <- c("plot", "cumulative incidence probability", "median table")
+    options("ggsurvfit.switch-color-linetype" = FALSE)
     result
   }

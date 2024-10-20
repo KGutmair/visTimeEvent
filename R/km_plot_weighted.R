@@ -6,6 +6,7 @@
 #' either the log-rank test or Wilcoxon test for two strata
 #'
 #' @inheritParams km_grouped
+#'
 #' @param weight_col Character string indicating the column name containing the weights.
 #' @param group_name Names of the groups to be compared (used for the risk table).
 #' @param risk_table Logical, default: TRUE. Should a risk table be displayed?
@@ -60,6 +61,8 @@ km_grouped_weighted <- function(data,
   group_sym <- sym(group)
   time_sym <- sym(time)
   event_sym <- sym(event)
+
+
   data1 <- data %>%
     rename(
       group1 = !!group_sym,
@@ -85,9 +88,13 @@ km_grouped_weighted <- function(data,
   ### Median survival and weighted logrank test
   median_surv <- adjusted_surv_quantile(adjsurv, p = 0.5, conf_int = TRUE)
 
+  # the log-rank test can only handle group variables with numeric 0/1
+  # or factor 0/1
+
   test1 <- ipw.log.rank(data1$time1, data1$event1, data1$group1,
-    weights = data[[weight_col]]
-  )
+    weights = data1[[weight_col]])
+
+
 
   median_surv$p_value <- c(test1$p.value, rep(NA, times = length(unique(data1$group1)) - 1))
   median_surv <- median_surv %>%
@@ -132,11 +139,36 @@ km_grouped_weighted <- function(data,
     color_curves <- primary.colors(n + 1)[-1]
   }
 
-  km_plot <- plot(adjsurv,
-    xlab = x_title, ylab = y_title, title = title,
-    censoring_ind = "lines", legend.title = "",
-    gg_theme = ggplot2::theme_bw()
-  ) +
+  if(is.null(custom_colors)) {
+    custom_colors <- rep("black", times = 2*length(unique(data1$group1)))
+  }
+
+
+  ### Survival curve
+  #### calcualting the survival curve with the normal surv object, because
+  # the adjusted curv object does only calcuate survival probabilities till
+  # the last event. Meaning, from the curve, I cannot see the whole
+  # observation period
+  surv_object <- survfit2(Surv(time1, event1) ~ group1,
+                          weights = data1[[weight_col]], data = data1)
+
+  survival.data <- data.frame("time" = surv_object$time,
+                              "surv" = surv_object$surv,
+                              "group" = c(rep(surv_probability$group[1], times = surv_object$strata[1]),
+                                          rep(surv_probability$group[2], times = surv_object$strata[2])),
+                              "ncensor" = surv_object$counts[, 3])
+
+  km_plot <- surv_object %>%
+    ggsurvfit() +
+    # adding censor marks, becaus the ggsurfit does not want to plot them
+    geom_point(data = survival.data[survival.data$ncensor > 0, ],
+               aes(x = time, y = surv, color = group),
+               shape = 3, size = 3) +
+    labs(
+      x = x_title,
+      y = y_title
+    ) +
+    ggtitle(title) +
     coord_cartesian(xlim = x_lim, ylim = y_lim) +
     scale_y_continuous(
       labels = scales::percent,
@@ -201,6 +233,21 @@ km_grouped_weighted <- function(data,
       )
   }
 
+  # if x_lim is nor defined, then this will be calculated by waiver()
+  # I need to exreact these values for plotting the risk table
+x_lim_present <- TRUE
+if(is.null(x_lim)) {
+  plot_data <- ggplot_build(km_plot)
+
+  x_breaks <- plot_data$layout$panel_params[[1]]$x$breaks
+  x_lim <- plot_data$layout$panel_params[[1]]$x.range
+  x_lim_present <- FALSE
+  print(c("km plot", x_breaks))
+  print(c("km plot", x_lim))
+
+}
+
+
 
   if (risk_table) {
     risk_tab <- plot_risk_table.groups(
@@ -213,7 +260,8 @@ km_grouped_weighted <- function(data,
       event = event,
       custom_colors = custom_colors,
       group_name = group_name,
-      show_weighted_n = show_weighted_n
+      show_weighted_n = show_weighted_n,
+      x_lim_present = x_lim_present
     )
 
     km_plot <- cowplot::plot_grid(km_plot, risk_tab,
@@ -221,6 +269,7 @@ km_grouped_weighted <- function(data,
       rel_heights = c(3, 1.2), axis = "l"
     )
   }
+
 
   result <- list(km_plot, median_surv, surv_probability)
   result
@@ -255,7 +304,7 @@ km_grouped_weighted <- function(data,
 #' @import ggplot2
 #'
 plot_risk_table.groups <- function(data,
-                                   x_breaks = waiver(),
+                                   x_breaks,
                                    x_lim,
                                    variable,
                                    ev_time,
@@ -271,7 +320,8 @@ plot_risk_table.groups <- function(data,
                                    color_groups = TRUE,
                                    reverse_order = TRUE,
                                    custom_colors,
-                                   vjust = 5) {
+                                   vjust = 5,
+                                   x_lim_present) {
   plotdata <- get_risk_table.groups(
     times = x_breaks, data = data,
     variable = variable,
@@ -307,8 +357,6 @@ plot_risk_table.groups <- function(data,
 
   p <- ggplot2::ggplot(data = plotdata, mapping) +
     main_geom +
-    coord_cartesian(xlim = x_lim) +
-    ggplot2::scale_x_continuous(breaks = x_breaks) +
     ggplot2::scale_y_continuous(breaks = c(0, 0.3, 1, 1.3), labels = c(
       "Event", "At risk",
       "Event", "At risk"
@@ -316,15 +364,17 @@ plot_risk_table.groups <- function(data,
     annotate(
       geom = "text",
       hjust = -Inf,
-      x = 5.2,
+      #x = 5.2,
+      x = x_lim[1] + (x_lim[2] - x_lim[1]) *0.05,
       y = 0.6,
       label = group_name[1],
       color = "black", size = 3.5
     ) +
     annotate(
       geom = "text",
-      hjust = -Inf,
-      x = 3.8,
+      #hjust = -Inf,
+      #x = 3.8,
+      x = x_lim[1] + (x_lim[2] - x_lim[1]) *0.05,
       y = 1.6,
       label = group_name[2],
       color = "black", size = 3.5
@@ -350,6 +400,23 @@ plot_risk_table.groups <- function(data,
   if (reverse_order) {
     # p <- p + ggplot2::scale_y_continous(limits=rev)
   }
+  # when I have not defined a x_limit value, than I need here to switch the
+  # padding of, so that the y limits of the km plot and the risk table are the same
+  # and I do not have a shift in the breaks
+  # If I have x_limits defined, than the paddings are the same in the km plot
+  # and in the risk table
+  if (x_lim_present == FALSE) {
+    p <- p + ggplot2::scale_x_continuous(limits = x_lim, breaks = x_breaks,
+                                expand = c(0, 0))
+  } else {
+    ggplot2::scale_x_continuous(limits = x_lim, breaks = x_breaks)
+  }
+  p_data <- ggplot_build(p)
+
+  x_breaks1 <- p_data$layout$panel_params[[1]]$x$breaks
+  x_lim1 <- p_data$layout$panel_params[[1]]$x.range
+  print(c("Risk table", x_breaks1))
+  print(c("Risk table", x_lim1))
 
   return(p)
 }
@@ -404,7 +471,8 @@ get_risk_table.groups <- function(times, data, variable, ev_time, event = NULL,
   # doing some customazion for easier plotting of the risk table
   out <- out %>%
     mutate_at(c("n_risk", "n_event"), function(x) round(x, 1))
-  out <- gather(out, .data$measure, .data$value, c(.data$n_risk, .data$n_event), factor_key = TRUE)
+  #out <- gather(out, .data$measure, .data$value, c(.data$n_risk, .data$n_event), factor_key = TRUE)
+  out<- gather(out, measure, value, c(n_risk, n_event), factor_key=TRUE)
   out <- out %>%
     mutate(
       group = (as.numeric(.data$group) - 1),

@@ -77,9 +77,6 @@ test_dat <- test_dat %>%
   filter(!is.na(trt))
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
-
 ``` r
 plot_km <- km_single(data = test_dat,
           time = "time",

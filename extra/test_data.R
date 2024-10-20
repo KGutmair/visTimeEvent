@@ -49,6 +49,9 @@ weight_obj <- weightit(trt_num ~ sex + platelet + trig + age, data = test_dat_ip
 
 test_dat_iptw$weights <- weight_obj$weights
 
+test_dat_iptw <- test_dat_iptw %>%
+  mutate(trt = as.factor(if_else(trt == "placebo", 0, 1)))
+
 km_grouped_weighted(data = test_dat_iptw,
            time = "time",
            event = "status_death",
@@ -60,7 +63,11 @@ km_grouped_weighted(data = test_dat_iptw,
           unit = "years",
           show_label = "probability",
           time_survival = 6,
-          x_breaks = c(0, 2, 4, 15))
+          x_lim = c(0, 14),
+          x_breaks = c(0, 2, 4, 6, 8, 12, 14),
+          risk_table = TRUE,
+          color_curves = c("darkgreen", "deepskyblue3"),
+          legend_placement = c(0.6, 0.2))
 
 
 
@@ -74,8 +81,9 @@ comp_risk_single(data = test_dat,
                  title = "Competing risk of a single group",
                  unit = "years",
                  colors = c("darkred", "darkblue"),
-                 show_label = "probability",
-                 time_survival = 8)
+                 show_label = "median",
+                 time_survival = 8,
+                 comp_risk_labels = c("censored", "transplant", "death") )
 
 # two groups
 

@@ -2,7 +2,7 @@
 title: "visTimeEvent package"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{my-vignette}
+  %\VignetteIndexEntry{visTimeEvent package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -60,7 +60,6 @@ test_dat <- test_dat %>%
   filter(!is.na(trt))
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
 
 ```{r KM-plot, one group, fig.width=7}
 plot_km <- km_single(
@@ -94,6 +93,50 @@ plot_km1 <- km_grouped(
 plot_km1[[1]]
 ```
 
+
+## Weighted Kaplan-Meier curves
+
+```{r KM-plot IPTW, two groups, fig.width=7, fig.height= 6}
+library(WeightIt)
+
+test_dat_iptw <- test_dat %>%
+  filter_at(vars(sex, platelet, trig, age), all_vars(!is.na(.)))
+
+weight_obj <- weightit(trt_num ~ sex + platelet + trig + age,
+  data = test_dat_iptw,
+  method = "glm"
+)
+
+test_dat_iptw$weights <- weight_obj$weights
+
+test_dat_iptw <- test_dat_iptw %>%
+  mutate(trt = as.factor(if_else(trt == "placebo", 0, 1)))
+
+plot_km_iptw <- km_grouped_weighted(
+  data = test_dat_iptw,
+  time = "time",
+  event = "status_death",
+  group = "trt",
+  weight_col = "weights",
+  group_name = c("treatment", "placebo"),
+  endpoint = "OS",
+  title = "Weighted KM- curves with two groups",
+  unit = "years",
+  show_label = "probability",
+  time_survival = 6,
+  x_lim = c(0, 14),
+  x_breaks = c(0, 2, 4, 6, 8, 12, 14),
+  risk_table = TRUE,
+  color_curves = c("darkgreen", "deepskyblue3"),
+  legend_placement = c(0.6, 0.2)
+)
+
+plot_km_iptw[[1]]
+```
+
+
+
+
 ## Cumulative incidence curves
 
 Plotted are both competing events
@@ -106,7 +149,8 @@ plot_cum <- comp_risk_single(
   unit = "years",
   colors = c("darkred", "darkblue"),
   show_label = "probability",
-  time_survival = 8
+  time_survival = 8,
+  comp_risk_labels = c("censored", "transplant", "death")
 )
 
 plot_cum[[1]]
