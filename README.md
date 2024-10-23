@@ -70,6 +70,7 @@ library(survival)
 test_dat <- survival::pbc
 test_dat <- test_dat %>%
   mutate(status_death = ifelse(status == 2, 1, 0),
+         status_death = as.integer(status_death),
          time = time/365,
          trt = as.factor(ifelse(trt == 1, "treatment", "placebo")),
          trt_num = ifelse(trt == "treatment", 1, 0),
@@ -91,7 +92,7 @@ plot_km <- km_single(data = test_dat,
 plot_km[[1]]
 ```
 
-<img src="man/figures/README-KM-plot, one group-1.png" width="100%" />
+<img src="man/figures/README-KM_plot_one_group-1.png" width="100%" />
 
 ``` r
 plot_km1<- km_grouped(data = test_dat,
@@ -112,7 +113,7 @@ plot_km1<- km_grouped(data = test_dat,
 plot_km1[[1]]
 ```
 
-<img src="man/figures/README-KM-plot, two groups-1.png" width="100%" />
+<img src="man/figures/README-KM_plot_two_groups-1.png" width="100%" />
 
 ``` r
 plot_cum <- comp_risk_single(data = test_dat,
@@ -128,4 +129,4 @@ plot_cum <- comp_risk_single(data = test_dat,
 plot_cum[[1]]
 ```
 
-<img src="man/figures/README-cumulative incidence plot, one group-1.png" width="100%" />
+<img src="man/figures/README-cumulative_incidence_plot_one_group-1.png" width="100%" />

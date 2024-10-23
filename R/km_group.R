@@ -58,6 +58,7 @@
 #' @import ggplot2
 #' @importFrom rlang .data
 #' @importFrom scales percent
+#' @import grid
 
 
 km_grouped <-
@@ -82,7 +83,7 @@ km_grouped <-
            text_size_title = 15,
            text_size = 12,
            show_p_values = TRUE,
-           p_placement = c(-0.2, -2),
+           p_placement = c(0.05, 0.15),
            legend_placement = c(0.6, 0.2)) {
 
 
@@ -93,15 +94,15 @@ km_grouped <-
     variables <- c(time, event, group)
     lapply(variables, function(var) assert_vector(var, any.missing = FALSE, len = 1))
     if (any(!variables %in% colnames(data))) {
-      stop("At least one of the variable names cannot be found in the data.")
+      stop("At least one of the variables time, event, group cannot be found in the data.")
     }
 
     # Assertions for strings and numeric values
     assert_string(title)
     assert_string(endpoint)
-    assertNumeric(data[[time]], lower = 0, any.missing = TRUE)
-    assertNumeric(data[[event]], any.missing = TRUE)
-    assertSubset(data[[event]], choices = c(0, 1), empty.ok = TRUE)
+    assertNumeric(data[[time]], lower = 0, any.missing = FALSE)
+    assert_integer(data[[event]], lower = 0, any.missing = FALSE)
+    assertSubset(data[[event]], choices = c(0, 1), empty.ok = FALSE)
     assertNumeric(time_survival, lower = 0, any.missing = TRUE, len = 1)
     assertNumeric(p_placement, any.missing = FALSE, len = 2)
     assertNumeric(legend_placement, any.missing = FALSE, len = 2)
@@ -211,6 +212,8 @@ km_grouped <-
       scale_x_continuous(breaks = x_breaks) +
       theme(
         plot.title = element_text(size = text_size_title),
+        # legend position: between 0 and 1, relative position, not bound to
+        # absolute values, so no dependence on the plot's scale
         legend.position = legend_placement, legend.key.size = unit(0.7, "cm"),
         legend.background = element_rect(fill = alpha("blue", 0)),
         axis.text.x = element_text(
@@ -230,14 +233,11 @@ km_grouped <-
 
     if(show_p_values == TRUE) {
       km_plot <- km_plot +
-        annotate(
-          geom = "text",
-          x = -Inf,
-          y = -Inf,
-          hjust = p_placement[1],
-          vjust = p_placement[2],
-          label = paste0("p = ", median_table$p_value[1]),
-          color = "black", size = 5
+        annotation_custom(
+          grob = textGrob(paste0("p = ", median_table$p_value[1]),
+                          x = p_placement[1], y = p_placement[2],
+                          hjust = 0, gp = gpar(col = "black")),
+          xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
         )
     }
 

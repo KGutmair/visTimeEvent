@@ -24,6 +24,7 @@
 #' @import ggplot2
 #' @importFrom rlang .data
 #' @importFrom scales percent
+#' @import grid
 
 
 km_single <-
@@ -45,7 +46,7 @@ km_single <-
            show_label = "none",
            text_size_title = 15,
            text_size = 12,
-           legend_placement = c(-0.5, -2)) {
+           legend_placement = c(0.5, 0.8)) {
 
 
     # Assert data frame structure
@@ -179,29 +180,22 @@ km_single <-
                            surv_prob_table$surv_prob, sep = " ")
 
       km_plot <- km_plot +
-        annotate(
-          geom = "text",
-          x = -Inf,
-          y = -Inf,
-          hjust = legend_placement[1],
-          vjust = legend_placement[2],
-          # label = paste0(endpoint,  " 1 year probability  = ", prob),
-          label = label_vec,
-          color = "black", size = 5
+        annotation_custom(
+          grob = textGrob(label_vec,
+                          legend_placement[1], y = legend_placement[2],
+                          hjust = 0, gp = gpar(col = "black")),
+          xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
         )
     } else if (show_label == "median") {
       label_vec <- paste( " median ", endpoint, ": ", median_table$median_CI, sep = " ")
+
       km_plot <- km_plot +
-        annotate(
-          geom = "text",
-          x = -Inf,
-          y = -Inf,
-          hjust = legend_placement[1],
-          vjust = legend_placement[2],
-          # label = paste0(endpoint,  " 1 year probability  = ", prob),
-          label = label_vec,
-          color = "black", size = 5
-        )
+      annotation_custom(
+        grob = textGrob(label_vec,
+                        legend_placement[1], y = legend_placement[2],
+                        hjust = 0, gp = gpar(col = "black")),
+        xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
+      )
     } else {
       km_plot
     }

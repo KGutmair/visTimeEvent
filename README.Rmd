@@ -63,6 +63,7 @@ library(survival)
 test_dat <- survival::pbc
 test_dat <- test_dat %>%
   mutate(status_death = ifelse(status == 2, 1, 0),
+         status_death = as.integer(status_death),
          time = time/365,
          trt = as.factor(ifelse(trt == 1, "treatment", "placebo")),
          trt_num = ifelse(trt == "treatment", 1, 0),
@@ -72,7 +73,7 @@ test_dat <- test_dat %>%
 
 
 
-```{r KM-plot, one group}
+```{r KM_plot_one_group}
 plot_km <- km_single(data = test_dat,
           time = "time",
           event = "status_death",
@@ -84,7 +85,7 @@ plot_km <- km_single(data = test_dat,
 plot_km[[1]]
 ```
 
-```{r KM-plot, two groups}
+```{r KM_plot_two_groups}
 plot_km1<- km_grouped(data = test_dat,
           time = "time",
           event = "status_death",
@@ -102,7 +103,7 @@ plot_km1[[1]]
 ```
 
 
-```{r cumulative incidence plot, one group}
+```{r cumulative_incidence_plot_one_group}
 plot_cum <- comp_risk_single(data = test_dat,
                  time = "time",
                  event = "status",

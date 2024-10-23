@@ -26,6 +26,7 @@
 #' @import ggplot2
 #' @importFrom ggsurvfit ggcuminc
 #' @importFrom stats as.formula
+#' @import grid
 
 comp_risk_grouped <- function(data,
                               time,
@@ -46,8 +47,18 @@ comp_risk_grouped <- function(data,
                               show_label = "none",
                               text_size_title = 15,
                               text_size = 12,
+                              p_placement = c(0.05, 0.15),
                               legend_placement = c(0.6, 0.8),
                               time_vec_prob = c(1, 2, 3)) {
+
+  #########################
+  # Checking input variables
+  ###########################
+
+  assert_numeric(data[[time]], lower = 0, any.missing = FALSE)
+  assert_factor(data[[event]], any.missing = FALSE)
+  assert_factor(data[[group]], any.missing = FALSE, max.levels = 2, min.levels = 2)
+
   # Creation of survival object and the cumulative incidence for a given timepoint
 
   formula <- as.formula(paste0("Surv(", time, ", ", event, ") ~ ", group))
@@ -116,14 +127,11 @@ print(formula)
     ) +
     add_risktable() +
     ggtitle(title) +
-    annotate(
-      geom = "text",
-      x = Inf,
-      y = -Inf,
-      hjust = 5.5,
-      vjust = -6,
-      label = paste0("p = ", p_value),
-      color = "black", size = 5
+    annotation_custom(
+      grob = textGrob(paste0("p = ", p_value),
+                      x = p_placement[1], y = p_placement[2],
+                      hjust = 0, gp = gpar(col = "black")),
+      xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
     ) +
     coord_cartesian(xlim = x_lim, ylim = y_lim) +
     scale_y_continuous(
@@ -158,8 +166,8 @@ print(formula)
         values = colors,
         # labeling both competing risks
         labels = c(
-          paste0(table_surv_prob$strata[2], " ", endpoint, ":", time_survival, " ", unit, table_surv_prob[2, 5]),
-          paste0(table_surv_prob$strata[1], " ", endpoint, ":", time_survival, " ", unit, table_surv_prob[1, 5])
+          paste0(table_surv_prob$strata[2], " ", endpoint, ": ", time_survival, " ", unit, table_surv_prob[2, 5]),
+          paste0(table_surv_prob$strata[1], " ", endpoint, ": ", time_survival, " ", unit, table_surv_prob[1, 5])
         )
       )
   } else if (show_label == "median") {

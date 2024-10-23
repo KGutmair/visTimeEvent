@@ -29,8 +29,11 @@ Imports:
     adjustedCurves (>= 0.11.2), 
     cowplot (>= 1.1.3), 
     tidyr (>= 1.3.1), 
-    tidycmprsk (>= 1.0.0)
+    tidycmprsk (>= 1.0.0),
+    grid (>= 4.3.2)
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    WeightIt,
+    ggplot2
 VignetteBuilder: knitr

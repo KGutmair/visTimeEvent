@@ -15,12 +15,15 @@ comp_risk_grouped(
   time_survival = 1,
   unit = "months",
   endpoint = "",
+  x_lim = NULL,
+  y_lim = c(0, 1),
   x_breaks = waiver(),
   y_breaks = seq(0, 1, by = 0.2),
   colors = FALSE,
   show_label = "none",
   text_size_title = 15,
   text_size = 12,
+  p_placement = c(0.05, 0.15),
   legend_placement = c(0.6, 0.8),
   time_vec_prob = c(1, 2, 3)
 )
@@ -52,6 +55,11 @@ Default is "months".}
 
 \item{endpoint}{A character string providing the name of the endpoint.}
 
+\item{x_lim}{A numeric vector of length two defining the limits of the x-axis.}
+
+\item{y_lim}{A numeric vector of length two defining the limits of the y-axis.
+Default is `c(0, 1)`.}
+
 \item{x_breaks}{A numeric vector specifying the break points for the x-axis labels.}
 
 \item{y_breaks}{A numeric vector specifying the break points for the y-axis labels.
@@ -66,6 +74,9 @@ labels within the plot. Options are `FALSE` (default), `median`, or `probability
 \item{text_size_title}{A numeric value specifying the font size of the title.}
 
 \item{text_size}{A numeric value specifying the font size of the text elements.}
+
+\item{p_placement}{numeric vector of length 2 indicating the position of the the p-value.
+The first number correspondend to the hjust placement, the second to the vjust placement}
 
 \item{legend_placement}{numeric vector of length 2 indicating the legend position. Default is c(0.6, 0.2).}
 

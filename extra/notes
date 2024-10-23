@@ -3,3 +3,4 @@ where can I put all the additinal stuff like notes?
 - fixing the skipping labels
 - running all checks and update document etc and install
 - adding all references (used packages) and chekc if the licence permits a further use
+adding everywhere checks, whether the varaible must be numeric, factor character etc.

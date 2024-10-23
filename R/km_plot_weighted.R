@@ -29,7 +29,8 @@
 #' @importFrom colorRamps primary.colors
 #' @import ggplot2
 #' @importFrom rlang .data
-#'  @importFrom scales percent
+#' @importFrom scales percent
+#' @import grid
 #'
 km_grouped_weighted <- function(data,
                                 time,
@@ -56,8 +57,17 @@ km_grouped_weighted <- function(data,
                                 # options: n_weighted, n_unweighted
                                 show_weighted_n = TRUE,
                                 show_p_values = TRUE,
-                                p_placement = c(-0.2, -2),
+                                p_placement = c(0.05, 0.15),
                                 legend_placement = c(0.6, 0.25)) {
+
+  ##############
+  # Checking input variables
+  ##############
+  assert_numeric(data[[time]], lower = 0, any.missing = FALSE)
+  assert_integer(data[[event]], lower = 0, any.missing = FALSE)
+  assertSubset(data[[event]], choices = c(0, 1), empty.ok = FALSE)
+  assert_factor(data[[group]], any.missing = FALSE, max.levels = 2, min.levels = 2)
+
   group_sym <- sym(group)
   time_sym <- sym(time)
   event_sym <- sym(event)
@@ -193,14 +203,20 @@ km_grouped_weighted <- function(data,
     )
   if (show_p_values == TRUE) {
     km_plot <- km_plot +
-      annotate(
-        geom = "text",
-        x = -Inf,
-        y = -Inf,
-        hjust = p_placement[1],
-        vjust = p_placement[2],
-        label = paste0("p = ", median_surv$p_value[1]),
-        color = "black", size = 5
+      # annotate(
+      #   geom = "text",
+      #   x = -Inf,
+      #   y = -Inf,
+      #   hjust = p_placement[1],
+      #   vjust = p_placement[2],
+      #   label = paste0("p = ", median_surv$p_value[1]),
+      #   color = "black", size = 5
+      # )
+      annotation_custom(
+        grob = textGrob(paste0("p = ", median_surv$p_value[1]),
+                        x = p_placement[1], y = p_placement[2],
+                        hjust = 0, gp = gpar(col = "black")),
+        xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
       )
   }
 
@@ -473,7 +489,7 @@ get_risk_table.groups <- function(times, data, variable, ev_time, event = NULL,
     mutate_at(c("n_risk", "n_event"), function(x) round(x, 1))
   #out <- gather(out, .data$measure, .data$value, c(.data$n_risk, .data$n_event), factor_key = TRUE)
   out<- gather(out, measure, value, c(n_risk, n_event), factor_key=TRUE)
-  out <- out %>%
+   out <- out %>%
     mutate(
       group = (as.numeric(.data$group) - 1),
       group = ifelse(.data$measure == "n_event", .data$group + 0.3, .data$group),

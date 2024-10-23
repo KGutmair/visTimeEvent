@@ -25,7 +25,7 @@ km_grouped(
   text_size_title = 15,
   text_size = 12,
   show_p_values = TRUE,
-  p_placement = c(-0.2, -2),
+  p_placement = c(0.05, 0.15),
   legend_placement = c(0.6, 0.2)
 )
 }

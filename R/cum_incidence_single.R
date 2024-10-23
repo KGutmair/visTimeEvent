@@ -26,6 +26,7 @@
 #' @importFrom survival Surv
 #'
 #'
+#'
 comp_risk_single <-
   function(data,
            time,
@@ -47,6 +48,11 @@ comp_risk_single <-
            legend_placement = c(0.48, 0.8),
            time_vec_prob = c(1, 2, 3),
            comp_risk_labels = NULL) {
+
+    # Checking parameter input
+    assert_numeric(data[[time]], lower = 0, any.missing = FALSE)
+    assert_factor(data[[event]], any.missing = FALSE)
+
     time_sym <- sym(time)
     event_sym <- sym(event)
     data1 <- data %>%

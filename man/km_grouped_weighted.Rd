@@ -29,7 +29,7 @@ km_grouped_weighted(
   color_curves = FALSE,
   show_weighted_n = TRUE,
   show_p_values = TRUE,
-  p_placement = c(-0.2, -2),
+  p_placement = c(0.05, 0.15),
   legend_placement = c(0.6, 0.25)
 )
 }

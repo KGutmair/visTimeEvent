@@ -3,6 +3,7 @@ library(dplyr)
 test_dat <- survival::pbc
 test_dat <- test_dat %>%
   mutate(status_death = ifelse(status == 2, 1, 0),
+         status_death = as.integer(status_death),
          time = time/365,
          trt = as.factor(ifelse(trt == 1, "treatment", "placebo")),
          trt_num = ifelse(trt == "treatment", 1, 0),

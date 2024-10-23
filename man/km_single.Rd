@@ -22,7 +22,7 @@ km_single(
   show_label = "none",
   text_size_title = 15,
   text_size = 12,
-  legend_placement = c(-0.5, -2)
+  legend_placement = c(0.5, 0.8)
 )
 }
 \arguments{

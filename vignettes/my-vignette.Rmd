@@ -50,18 +50,17 @@ library(dplyr)
 ```{r example}
 test_dat <- survival::pbc
 test_dat <- test_dat %>%
-  mutate(
-    status_death = ifelse(status == 2, 1, 0),
-    time = time / 365,
-    trt = as.factor(ifelse(trt == 1, "treatment", "placebo")),
-    trt_num = ifelse(trt == "treatment", 1, 0),
-    status = as.factor(status)
-  ) %>%
+  mutate(status_death = ifelse(status == 2, 1, 0),
+         status_death = as.integer(status_death),
+         time = time/365,
+         trt = as.factor(ifelse(trt == 1, "treatment", "placebo")),
+         trt_num = ifelse(trt == "treatment", 1, 0),
+         status = as.factor(status)) %>%
   filter(!is.na(trt))
 ```
 
 
-```{r KM-plot, one group, fig.width=7}
+```{r KM_plot_one_group, fig.width=7}
 plot_km <- km_single(
   data = test_dat,
   time = "time",
@@ -75,7 +74,7 @@ plot_km <- km_single(
 plot_km[[1]]
 ```
 
-```{r KM-plot, two groups, fig.width=7, fig.height= 5}
+```{r KM_plot_two_groups, fig.width=7, fig.height= 5}
 plot_km1 <- km_grouped(
   data = test_dat,
   time = "time",
@@ -96,7 +95,7 @@ plot_km1[[1]]
 
 ## Weighted Kaplan-Meier curves
 
-```{r KM-plot IPTW, two groups, fig.width=7, fig.height= 6}
+```{r KM_plot_IPTW_two_groups, fig.width=7, fig.height= 6}
 library(WeightIt)
 
 test_dat_iptw <- test_dat %>%
@@ -140,7 +139,7 @@ plot_km_iptw[[1]]
 ## Cumulative incidence curves
 
 Plotted are both competing events
-```{r cumulative incidence plot, one group, fig.width=7}
+```{r cumulative_incidence_plot_one_group, fig.width=7}
 plot_cum <- comp_risk_single(
   data = test_dat,
   time = "time",
@@ -158,7 +157,7 @@ plot_cum[[1]]
 
 
 Plotted are the competing event labeled with 1
-```{r cumulative incidence plot, two groups, fig.width=7, fig.height=5}
+```{r cumulative_incidence_plot_two_groups, fig.width=7, fig.height=5}
 plot_cum1 <- comp_risk_grouped(
   data = test_dat,
   time = "time",

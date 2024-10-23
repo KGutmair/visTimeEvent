@@ -13,7 +13,6 @@ comp_risk_single(
   unit = "months",
   x_title = waiver(),
   y_title = waiver(),
-  endpoint = "",
   x_lim = NULL,
   y_lim = c(0, 1),
   x_breaks = waiver(),
@@ -23,14 +22,15 @@ comp_risk_single(
   text_size_title = 15,
   text_size = 12,
   legend_placement = c(0.48, 0.8),
-  time_vec_prob = c(1, 2, 3)
+  time_vec_prob = c(1, 2, 3),
+  comp_risk_labels = NULL
 )
 }
 \arguments{
 \item{data}{A `data.frame` containing the necessary columns: time, event, and group.}
 
 \item{time}{A character string specifying the column name of the numeric time
-variable for the time-to-event endpoint. 0 = cebsored.}
+variable for the time-to-event endpoint. 0 = censored.}
 
 \item{event}{A character string specifying the column name of the event indicator.
 Should be a numeric variable where 1 represents an event, and 0
@@ -47,8 +47,6 @@ Default is "months".}
 \item{x_title}{A character string specifying the label for the x-axis.}
 
 \item{y_title}{A character string specifying the label for the y-axis.}
-
-\item{endpoint}{A character string providing the name of the endpoint.}
 
 \item{x_lim}{A numeric vector of length two defining the limits of the x-axis.}
 
@@ -74,6 +72,9 @@ labels within the plot. Options are `FALSE` (default), `median`, or `probability
 
 \item{time_vec_prob}{numeric vector containing time points, on which one wants to display
 the probability of the incidence.}
+
+\item{comp_risk_labels}{a character vector of the same length as the number of competing
+risks with its names (e.g. death due to cancer, death due to corona)}
 }
 \value{
 a list with the cumulative incidence plot, a table with the median incidence
