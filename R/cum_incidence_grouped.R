@@ -7,12 +7,14 @@
 #'
 #' @description
 #' This function plots the cumualative incidence curves of two groups with competing
-#' events. Plottet will only be the first argument. One can optinally display the
+#' events. Plotted will only be the first competing event (first level). One can optinally display the
 #' median incidence time or incidence after a certain time.
 #'
 #' @inheritParams km_grouped
 #' @param time A character string specifying the column name of the numeric time
-#'             variable for the time-to-event endpoint. 0 = censored.
+#'             variable for the time-to-event endpoint.
+#' @param event A character string specifying the column name of the factor event
+#'              variable for the time-to-event endpoint.
 #' @param time_vec_prob numeric vector containing time points, on which one wants to display
 #'                      the probability of the incidence.
 #'
@@ -166,8 +168,8 @@ print(formula)
         values = colors,
         # labeling both competing risks
         labels = c(
-          paste0(table_surv_prob$strata[2], " ", endpoint, ": ", time_survival, " ", unit, table_surv_prob[2, 5]),
-          paste0(table_surv_prob$strata[1], " ", endpoint, ": ", time_survival, " ", unit, table_surv_prob[1, 5])
+          paste0(table_surv_prob$strata[1], " ", endpoint, ": ", time_survival, " ", unit, ": ", table_surv_prob[1, 5]),
+          paste0(table_surv_prob$strata[2], " ", endpoint, ": ", time_survival, " ", unit, ": ", table_surv_prob[2, 5])
         )
       )
   } else if (show_label == "median") {
@@ -176,8 +178,8 @@ print(formula)
         values = colors,
         # labeling both competing risks
         labels = c(
-          paste0(median_table$outcome[2], ": median survival ", median_table$time[2]),
-          paste0(median_table$outcome[1], ": median survival ", median_table$time[1])
+          paste0(median_table$outcome[1], ": median survival ", median_table$time[1]),
+          paste0(median_table$outcome[2], ": median survival ", median_table$time[2])
         )
       )
   } else {
