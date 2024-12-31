@@ -5,6 +5,7 @@
 #'            Additionally, p-values, median survival and probability of survival
 #'            after a certain time is computed and added as information to the plot,
 #'            if desired.
+#'            Note, that the log.rank test is only possible for two groups
 #'
 #'
 #' @param data A `data.frame` containing the necessary columns: time, event, and group.
@@ -101,12 +102,12 @@ km_grouped <-
     assert_string(title)
     assert_string(endpoint)
     assertNumeric(data[[time]], lower = 0, any.missing = FALSE)
-    assert_integer(data[[event]], lower = 0, any.missing = FALSE)
+    assert_numeric(data[[event]], lower = 0, any.missing = FALSE)
     assertSubset(data[[event]], choices = c(0, 1), empty.ok = FALSE)
     assertNumeric(time_survival, lower = 0, any.missing = TRUE, len = 1)
     assertNumeric(p_placement, any.missing = FALSE, len = 2)
     assertNumeric(legend_placement, any.missing = FALSE, len = 2)
-
+    assert_factor(data[[group]], any.missing = FALSE, min.levels = 2)
 
     # Check if the number of colors matches the number of groups
     if (!identical(colors, FALSE) && length(colors) != length(unique(data[[group]]))) {
@@ -156,20 +157,10 @@ km_grouped <-
     print(paste0("- significance test: ", test))
     print(paste0("- time-to-event probability of ", time_survival, " ", unit))
 
-    group_sym <- sym(group)
-    time_sym <- sym(time)
-    event_sym <- sym(event)
-
-    data1 <- data %>%
-      rename(
-        group1 = !!group_sym,
-        time1 = !!time_sym,
-        event1 = !!event_sym
-      )
 
     # specifying colors, if they were not specified in the parameters
     if (is.logical(colors)) {
-      n <- length(unique(data1$group1))
+      n <- length(unique(data[[group]]))
       colors <- colorRamps::primary.colors(n + 1)[-1]
     }
 
@@ -194,9 +185,10 @@ km_grouped <-
 
 
     # plotting the survival curves
+formula <- as.formula(paste0("Surv(", time, ", ", event, ") ~ ", group))
     km_plot <-
-      survfit2(Surv(time = time1, event = event1) ~ group1,
-               data = data1
+      survfit2(formula = formula,
+               data = data
       ) %>%
       ggsurvfit() +
       labs(
@@ -306,31 +298,23 @@ median_probability <-
            test = "log-rank") {
 
 
-    group_sym <- sym(group)
-    time_sym <- sym(time)
-    event_sym <- sym(event)
-    data1 <- data %>%
-      rename(
-        group1 = !!group_sym,
-        time1 = !!time_sym,
-        event1 = !!event_sym
-      )
-
+    formula <- as.formula(paste0("Surv(", time, ", ", event, ") ~ ", group))
     res <-
-      summary(survfit(Surv(time = time1, event = event1) ~ group1, data = data1),
+      summary(survfit(formula = formula, data = data),
               times = time_survival, extend = TRUE, conf.type = "arcsin"
       )
+    print(res)
 
     # table of survival probabilities
     survival_prob <- data.frame(res$time, res$n.risk, res$n.event, res$surv, res$lower, res$upper)
     survival_prob <- survival_prob %>%
-      mutate(names = unique(data1$group1)) %>%
+      mutate(names = levels(data[[group]])) %>%
       mutate(
-        survival_prop = round(.data$res.surv * 100, 0),
+        surv_prop1 = round(.data$res.surv * 100, 0),
         LCI = round(.data$res.lower * 100, 0),
         UCI = round(.data$res.upper * 100, 0)
       ) %>%
-      mutate(surv_prob = paste0(.data$survival_prop, "% (", .data$LCI, " - ", .data$UCI, ")")) %>%
+      mutate(surv_prob = paste0(.data$surv_prop1, "% (", .data$LCI, " - ", .data$UCI, ")")) %>%
       select(-c(.data$res.surv, .data$res.lower, .data$res.upper)) %>%
       relocate(.data$names, .data$res.time, .data$res.n.risk, .data$res.n.event, .data$surv_prob)
 
@@ -339,7 +323,8 @@ median_probability <-
                    "wilcoxon" = 1
     )
     res_test <-
-      survdiff(Surv(time1, event1) ~ group1, data = data1, rho = type)
+      survdiff(formula = formula,
+               data = data, rho = type)
 
     # Table of median
     median_tab <- as.data.frame(res$table)

@@ -32,11 +32,10 @@ comp_risk_grouped(
 \item{data}{A `data.frame` containing the necessary columns: time, event, and group.}
 
 \item{time}{A character string specifying the column name of the numeric time
-variable for the time-to-event endpoint. 0 = censored.}
+variable for the time-to-event endpoint.}
 
-\item{event}{A character string specifying the column name of the event indicator.
-Should be a numeric variable where 1 represents an event, and 0
-represents no event or right-censoring.}
+\item{event}{A character string specifying the column name of the factor event
+variable for the time-to-event endpoint.}
 
 \item{group}{A character string specifying the grouping variable used for stratifying
 the Kaplan-Meier curves.}
@@ -89,6 +88,6 @@ and a table with the probability of an event after certain timepoints
 }
 \description{
 This function plots the cumualative incidence curves of two groups with competing
-events. Plottet will only be the first argument. One can optinally display the
+events. Plotted will only be the first competing event (first level). One can optinally display the
 median incidence time or incidence after a certain time.
 }

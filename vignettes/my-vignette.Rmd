@@ -81,7 +81,7 @@ plot_km1 <- km_grouped(
   event = "status_death",
   group = "trt",
   time_survival = 6,
-  test = "wilcoxon",
+  #test = "wilcoxon",
   title = "Kaplan-Meier curves for two groups",
   unit = "years",
   endpoint = "OS",
@@ -148,8 +148,7 @@ plot_cum <- comp_risk_single(
   unit = "years",
   colors = c("darkred", "darkblue"),
   show_label = "probability",
-  time_survival = 8,
-  comp_risk_labels = c("censored", "transplant", "death")
+  time_survival = 8
 )
 
 plot_cum[[1]]

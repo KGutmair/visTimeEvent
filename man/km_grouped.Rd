@@ -98,4 +98,5 @@ This function is plotting Kaplan-Meier curves stratified by groups.
            Additionally, p-values, median survival and probability of survival
            after a certain time is computed and added as information to the plot,
            if desired.
+           Note, that the log.rank test is only possible for two groups
 }

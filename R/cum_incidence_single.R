@@ -8,8 +8,6 @@
 #'
 #' @param time A character string specifying the column name of the numeric time
 #'             variable for the time-to-event endpoint. 0 = censored.
-#' @param comp_risk_labels a character vector of the same length as the number of competing
-#'                         risks with its names (e.g. death due to cancer, death due to corona)
 #' @inheritParams km_grouped
 #' @param time_vec_prob numeric vector containing time points, on which one wants to display
 #'                      the probability of the incidence.
@@ -46,25 +44,16 @@ comp_risk_single <-
            text_size_title = 15,
            text_size = 12,
            legend_placement = c(0.48, 0.8),
-           time_vec_prob = c(1, 2, 3),
-           comp_risk_labels = NULL) {
+           time_vec_prob = c(1, 2, 3)) {
 
     # Checking parameter input
     assert_numeric(data[[time]], lower = 0, any.missing = FALSE)
     assert_factor(data[[event]], any.missing = FALSE)
 
-    time_sym <- sym(time)
-    event_sym <- sym(event)
-    data1 <- data %>%
-      rename(
-        time1 = !!time_sym,
-        event1 = !!event_sym
-      )
-if(!is.null(comp_risk_labels) == TRUE) {
-  data1$event1 <- factor(data1$event1, labels = comp_risk_labels)
-}
 
-    cr <- levels(data1$event1)[-1]
+
+
+    cr <- levels(data[[event]])[-1]
     print(cr)
 
     helper_df <- data.frame(outcome = cr)
@@ -72,8 +61,9 @@ if(!is.null(comp_risk_labels) == TRUE) {
 
 
     # Creation of survival object and the cumulative incidence for a given timepoint
-    surv_object <- tidycmprsk::cuminc(Surv(time1, event1) ~ 1,
-      data = data1, conf.type = "arcsin"
+    formula <- as.formula(paste0("Surv(", time, ", ", event, ") ~ ", 1))
+    surv_object <- tidycmprsk::cuminc(formula = formula,
+      data = data, conf.type = "arcsin"
     )
     # adding the outcome (competing events) as factor again, becaus the factor coding is
     # deleted when computing the cuminc object
@@ -105,8 +95,10 @@ median_table <- merge(helper_df, median_table, by = "outcome", all.x = TRUE)
     options("ggsurvfit.switch-color-linetype" = TRUE)
     # specifying colors, if they were not specified in the parameters
     if (is.logical(colors)) {
-      colors <- colorRamps::primary.colors(1)
+      n <- length(levels(data[[event]])) -1
+      colors <- colorRamps::primary.colors(n + 1)[-1]
     }
+    print(length(colors))
 
     plot <- surv_object %>%
       ggcuminc(outcome = cr) +

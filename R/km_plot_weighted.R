@@ -4,11 +4,17 @@
 #' This function plots Kaplan-Meier curves and calculates median survival time,
 #' the probability of getting an event after a certain period and p values of
 #' either the log-rank test or Wilcoxon test for two strata
+#' Note, that the log.rank test is only possible for two groups
 #'
 #' @inheritParams km_grouped
 #'
 #' @param weight_col Character string indicating the column name containing the weights.
-#' @param group_name Names of the groups to be compared (used for the risk table).
+#' @param group_name Names of the groups to be compared (only used for the labels of the risk table).
+#'                   The names are plotted in the corresponding order: first element of the vector
+#'                   is printed in the risk table in first position, the second element of the
+#'                   vector is printed above. In the risl table, the order of the risk table
+#'                   corresponds to the order of the levels of the group variable: the first level
+#'                   is printed at first, the second level above
 #' @param risk_table Logical, default: TRUE. Should a risk table be displayed?
 #' @param custom_colors Character string specifying the colors for the risk table. If not provided, default colors will be automatically selected.
 #' @param color_curves Character string specifying the colors for the survival curves.
@@ -64,7 +70,7 @@ km_grouped_weighted <- function(data,
   # Checking input variables
   ##############
   assert_numeric(data[[time]], lower = 0, any.missing = FALSE)
-  assert_integer(data[[event]], lower = 0, any.missing = FALSE)
+  assert_numeric(data[[event]], lower = 0, any.missing = FALSE)
   assertSubset(data[[event]], choices = c(0, 1), empty.ok = FALSE)
   assert_factor(data[[group]], any.missing = FALSE, max.levels = 2, min.levels = 2)
 
@@ -101,8 +107,9 @@ km_grouped_weighted <- function(data,
   # the log-rank test can only handle group variables with numeric 0/1
   # or factor 0/1
 
-  test1 <- ipw.log.rank(data1$time1, data1$event1, data1$group1,
-    weights = data1[[weight_col]])
+  data1$group_num <- as.numeric(data1$group1) -1
+  test1 <- ipw.log.rank(data1$time1, data1$event1, data1$group_num,
+                        weights = data1[[weight_col]])
 
 
 
@@ -114,7 +121,7 @@ km_grouped_weighted <- function(data,
       ci_upper = format(round(.data$ci_upper, 2), nsmall = 2),
       CI_95 = paste0(.data$ci_lower, " - ", .data$ci_upper),
       p_value = ifelse(.data$p_value >= 0.1, format(round(.data$p_value, 2),
-        nsmall = 2
+                                                    nsmall = 2
       ), format(round(.data$p_value, 3), nsmall = 3)),
       p_value = ifelse(.data$p_value < 0.001, "< 0.001", .data$p_value)
     ) %>%
@@ -251,17 +258,18 @@ km_grouped_weighted <- function(data,
 
   # if x_lim is nor defined, then this will be calculated by waiver()
   # I need to exreact these values for plotting the risk table
-x_lim_present <- TRUE
-if(is.null(x_lim)) {
-  plot_data <- ggplot_build(km_plot)
+  x_lim_present <- TRUE
+  if(is.null(x_lim)) {
+    plot_data <- ggplot_build(km_plot)
 
-  x_breaks <- plot_data$layout$panel_params[[1]]$x$breaks
-  x_lim <- plot_data$layout$panel_params[[1]]$x.range
-  x_lim_present <- FALSE
-  print(c("km plot", x_breaks))
-  print(c("km plot", x_lim))
+    x_breaks <- plot_data$layout$panel_params[[1]]$x$breaks
+    x_lim <- plot_data$layout$panel_params[[1]]$x.range
+    x_lim_present <- FALSE
+    print(c("km plot", x_breaks))
+    print(c("km plot", x_lim))
 
-}
+  }
+
 
 
 
@@ -281,8 +289,8 @@ if(is.null(x_lim)) {
     )
 
     km_plot <- cowplot::plot_grid(km_plot, risk_tab,
-      ncol = 1, align = "v",
-      rel_heights = c(3, 1.2), axis = "l"
+                                  ncol = 1, align = "v",
+                                  rel_heights = c(3, 1.2), axis = "l"
     )
   }
 
@@ -380,19 +388,17 @@ plot_risk_table.groups <- function(data,
     annotate(
       geom = "text",
       hjust = -Inf,
-      #x = 5.2,
-      x = x_lim[1] + (x_lim[2] - x_lim[1]) *0.05,
+      x = 3.8,
       y = 0.6,
-      label = group_name[1],
+      label = group_name[2],
       color = "black", size = 3.5
     ) +
     annotate(
       geom = "text",
-      #hjust = -Inf,
-      #x = 3.8,
-      x = x_lim[1] + (x_lim[2] - x_lim[1]) *0.05,
+      hjust = -Inf,
+      x = 5.2,
       y = 1.6,
-      label = group_name[2],
+      label = group_name[1],
       color = "black", size = 3.5
     ) +
 
@@ -423,7 +429,7 @@ plot_risk_table.groups <- function(data,
   # and in the risk table
   if (x_lim_present == FALSE) {
     p <- p + ggplot2::scale_x_continuous(limits = x_lim, breaks = x_breaks,
-                                expand = c(0, 0))
+                                         expand = c(0, 0))
   } else {
     ggplot2::scale_x_continuous(limits = x_lim, breaks = x_breaks)
   }
@@ -473,6 +479,8 @@ get_risk_table.groups <- function(times, data, variable, ev_time, event = NULL,
       weights_i <- NULL
     }
 
+
+
     out_i <- get_risk_table.all(
       times = times, data = dat_temp, ev_time = ev_time,
       event = event, weights = weights_i, show_weighted_n = show_weighted_n
@@ -484,15 +492,20 @@ get_risk_table.groups <- function(times, data, variable, ev_time, event = NULL,
   out <- bind_rows(out)
   out$group <- factor(out$group, levels = levs)
 
+
+
   # doing some customazion for easier plotting of the risk table
   out <- out %>%
     mutate_at(c("n_risk", "n_event"), function(x) round(x, 1))
   #out <- gather(out, .data$measure, .data$value, c(.data$n_risk, .data$n_event), factor_key = TRUE)
   out<- gather(out, measure, value, c(n_risk, n_event), factor_key=TRUE)
-   out <- out %>%
+  out <- out %>%
     mutate(
       group = (as.numeric(.data$group) - 1),
-      group = ifelse(.data$measure == "n_event", .data$group + 0.3, .data$group),
+      # I want it the other way round: the reference level of the
+      # group should be 1, because this is printed above the other level
+      group = ifelse(.data$group == 0, 1, 0),
+      group = ifelse(.data$measure == "n_risk", .data$group + 0.3, .data$group),
       group1 = factor(.data$group, levels = c(0, 0.3, 1, 1.3))
     )
 
@@ -527,11 +540,11 @@ get_risk_table.all <- function(times, data, ev_time, event = NULL,
   )
 
   n_event <- vapply(times,
-    FUN = function(x) {
-      sum(weights[data[, ev_time] < x &
-        data[, event] == 1])
-    },
-    FUN.VALUE = numeric(1)
+                    FUN = function(x) {
+                      sum(weights[data[, ev_time] < x &
+                                    data[, event] == 1])
+                    },
+                    FUN.VALUE = numeric(1)
   )
   # cumulative number of right-censored observations
 

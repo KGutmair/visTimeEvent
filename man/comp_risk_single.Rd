@@ -22,8 +22,7 @@ comp_risk_single(
   text_size_title = 15,
   text_size = 12,
   legend_placement = c(0.48, 0.8),
-  time_vec_prob = c(1, 2, 3),
-  comp_risk_labels = NULL
+  time_vec_prob = c(1, 2, 3)
 )
 }
 \arguments{
@@ -72,9 +71,6 @@ labels within the plot. Options are `FALSE` (default), `median`, or `probability
 
 \item{time_vec_prob}{numeric vector containing time points, on which one wants to display
 the probability of the incidence.}
-
-\item{comp_risk_labels}{a character vector of the same length as the number of competing
-risks with its names (e.g. death due to cancer, death due to corona)}
 }
 \value{
 a list with the cumulative incidence plot, a table with the median incidence

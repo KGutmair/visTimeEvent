@@ -48,7 +48,12 @@ the Kaplan-Meier curves.}
 
 \item{weight_col}{Character string indicating the column name containing the weights.}
 
-\item{group_name}{Names of the groups to be compared (used for the risk table).}
+\item{group_name}{Names of the groups to be compared (only used for the labels of the risk table).
+The names are plotted in the corresponding order: first element of the vector
+is printed in the risk table in first position, the second element of the
+vector is printed above. In the risl table, the order of the risk table
+corresponds to the order of the levels of the group variable: the first level
+is printed at first, the second level above}
 
 \item{endpoint}{A character string providing the name of the endpoint.}
 
@@ -106,4 +111,5 @@ the prespecified period and its confidence interval, the p value of the log rank
 This function plots Kaplan-Meier curves and calculates median survival time,
 the probability of getting an event after a certain period and p values of
 either the log-rank test or Wilcoxon test for two strata
+Note, that the log.rank test is only possible for two groups
 }

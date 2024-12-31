@@ -109,14 +109,7 @@ km_single <-
     print("Following options were chosen: ")
     print(paste0("- time-to-event probability of ", time_survival, " ", unit))
 
-    time_sym <- sym(time)
-    event_sym <- sym(event)
 
-    data1 <- data %>%
-      rename(
-        time1 = !!time_sym,
-        event1 = !!event_sym
-      )
 
     # specifying colors, if they were not specified in the parameters
     if (is.logical(colors)) {
@@ -140,9 +133,10 @@ km_single <-
 
 
     # plotting the survival curves
+    formula <- as.formula(paste0("Surv(", time, ", ", event, ") ~ ", 1))
     km_plot <-
-      survfit2(Surv(time = time1, event = event1) ~ 1,
-               data = data1
+      survfit2(formula = formula,
+               data = data
       ) %>%
       ggsurvfit(color = colors) +
       labs(
@@ -234,17 +228,9 @@ median_probability_single <-
            # 5 year- probbaility of survival
            time_survival = 1) {
 
-
-    time_sym <- sym(time)
-    event_sym <- sym(event)
-    data1 <- data %>%
-      rename(
-        time1 = !!time_sym,
-        event1 = !!event_sym
-      )
-
+    formula <- as.formula(paste0("Surv(", time, ", ", event, ") ~ ", 1))
     res <-
-      summary(survfit(Surv(time = time1, event = event1) ~ 1, data = data1),
+      summary(survfit(formula = formula, data = data),
               times = time_survival, extend = TRUE, conf.type = "arcsin"
       )
 
