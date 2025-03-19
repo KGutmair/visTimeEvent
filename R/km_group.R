@@ -331,7 +331,7 @@ median_probability <-
     median_tab <- median_tab %>%
       mutate_at(c("median", "0.95LCL", "0.95UCL"), function(x) format(round(x, 2), nsmall = 2)) %>%
       mutate(
-        time = rep(as.character(time_survival), times = 2),
+        time = rep(as.character(time_survival), times = length(unique(data[[group]]))),
         pvalue = ifelse(res_test$pvalue >= 0.1,
                         format(round(res_test$pvalue, 2), nsmall = 2),
                         format(round(res_test$pvalue, 3), nsmall = 3)

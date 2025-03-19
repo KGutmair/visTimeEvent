@@ -72,7 +72,7 @@ km_grouped_weighted <- function(data,
   assert_numeric(data[[time]], lower = 0, any.missing = FALSE)
   assert_numeric(data[[event]], lower = 0, any.missing = FALSE)
   assertSubset(data[[event]], choices = c(0, 1), empty.ok = FALSE)
-  assert_factor(data[[group]], any.missing = FALSE, max.levels = 2, min.levels = 2)
+  assert_factor(data[[group]], any.missing = FALSE, min.levels = 2)
 
   group_sym <- sym(group)
   time_sym <- sym(time)
@@ -169,10 +169,12 @@ km_grouped_weighted <- function(data,
   surv_object <- survfit2(Surv(time1, event1) ~ group1,
                           weights = data1[[weight_col]], data = data1)
 
+
   survival.data <- data.frame("time" = surv_object$time,
                               "surv" = surv_object$surv,
                               "group" = c(rep(surv_probability$group[1], times = surv_object$strata[1]),
-                                          rep(surv_probability$group[2], times = surv_object$strata[2])),
+                                          rep(surv_probability$group[2], times = surv_object$strata[2]),
+                                          rep(surv_probability$group[3], times = surv_object$strata[3])),
                               "ncensor" = surv_object$counts[, 3])
 
   km_plot <- surv_object %>%
@@ -381,15 +383,22 @@ plot_risk_table.groups <- function(data,
 
   p <- ggplot2::ggplot(data = plotdata, mapping) +
     main_geom +
-    ggplot2::scale_y_continuous(breaks = c(0, 0.3, 1, 1.3), labels = c(
-      "Event", "At risk",
-      "Event", "At risk"
-    )) +
+    ggplot2::scale_y_continuous(breaks = sort(unique(plotdata$group)),
+                                labels = rep(c("Event", "Times"),
+                                             times = length(unique(plotdata$group))/2)) +
     annotate(
       geom = "text",
       hjust = -Inf,
       x = 3.8,
       y = 0.6,
+      label = group_name[3],
+      color = "black", size = 3.5
+    ) +
+    annotate(
+      geom = "text",
+      hjust = -Inf,
+      x = 3.8,
+      y = 1.6,
       label = group_name[2],
       color = "black", size = 3.5
     ) +
@@ -397,7 +406,7 @@ plot_risk_table.groups <- function(data,
       geom = "text",
       hjust = -Inf,
       x = 5.2,
-      y = 1.6,
+      y = 2.6,
       label = group_name[1],
       color = "black", size = 3.5
     ) +
@@ -504,12 +513,13 @@ get_risk_table.groups <- function(times, data, variable, ev_time, event = NULL,
       group = (as.numeric(.data$group) - 1),
       # I want it the other way round: the reference level of the
       # group should be 1, because this is printed above the other level
-      group = ifelse(.data$group == 0, 1, 0),
-      group = ifelse(.data$measure == "n_risk", .data$group + 0.3, .data$group),
-      group1 = factor(.data$group, levels = c(0, 0.3, 1, 1.3))
-    )
+      group = max(group)  - group,
+      group = ifelse(.data$measure == "n_risk", .data$group + 0.3, .data$group))
 
-  return(out)
+  out1 <- out %>%
+    mutate( group1 = factor(.data$group, levels = sort(unique(.data$group))))
+
+  return(out1)
 }
 
 
