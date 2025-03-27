@@ -112,7 +112,6 @@ km_grouped_weighted <- function(data,
                         weights = data1[[weight_col]])
 
 
-
   median_surv$p_value <- c(test1$p.value, rep(NA, times = length(unique(data1$group1)) - 1))
   median_surv <- median_surv %>%
     mutate(
@@ -176,6 +175,7 @@ km_grouped_weighted <- function(data,
                                           rep(surv_probability$group[2], times = surv_object$strata[2]),
                                           rep(surv_probability$group[3], times = surv_object$strata[3])),
                               "ncensor" = surv_object$counts[, 3])
+
 
   km_plot <- surv_object %>%
     ggsurvfit() +
