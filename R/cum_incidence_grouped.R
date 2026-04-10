@@ -142,7 +142,11 @@ print(formula)
     ) +
     scale_x_continuous(breaks = x_breaks) +
     theme(
-      plot.title = element_text(size = text_size_title),
+      plot.title = element_text(
+        face = "bold",         # makes it bold
+        hjust = 0.5,
+        size = text_size_title
+      ),
       legend.position = legend_placement, legend.key.size = unit(0.7, "cm"),
       legend.background = element_rect(fill = alpha("blue", 0)),
       axis.text.x = element_text(

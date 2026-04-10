@@ -42,7 +42,7 @@ km_single <-
            x_breaks = waiver(),
            y_breaks = seq(0, 1, by = 0.2),
            colors = FALSE,
-           # otpions: median, probability
+           # otpions: median, probability, minmax, iqr
            show_label = "none",
            text_size_title = 15,
            text_size = 12,
@@ -100,7 +100,7 @@ km_single <-
 
     # Assert show_label is a valid option
     assert_character(show_label, any.missing = FALSE, max.len = 1)
-    assertSubset(show_label, choices = c("none", "median", "probability"))
+    assertSubset(show_label, choices = c("none", "median", "probability", "minmax", "IQR"))
 
     # Assertions for text sizes
     lapply(list(text_size_title, text_size),
@@ -167,6 +167,16 @@ km_single <-
       add_censor_mark(color = colors) +
       add_risktable()
 
+    # calculate median, iqr, minimum and maximum for the estimate
+    quartiles <- km_plot$data %>%
+      #group_by(strata) %>%
+      summarise(
+        min = nth(time, 2),
+        max = nth(time, n()),
+        q25 = ifelse(any(estimate <= 0.75), min(time[estimate <= 0.75]), NA),
+        median = ifelse(any(estimate <= 0.5), min(time[estimate <= 0.5]), NA),
+        q75 = ifelse(any(estimate <= 0.25), min(time[estimate <= 0.25]), NA)
+      )
 
     # setting labels, if desired
     if (show_label == "probability") {
@@ -190,6 +200,24 @@ km_single <-
                         hjust = 0, gp = gpar(col = "black")),
         xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
       )
+    } else if (show_label == "minmax") {
+      label_vec <- paste0( " median ", endpoint, ": ", round(quartiles$median, 2), " (", round(quartiles$min, 2), " - ", round(quartiles$max, 2))
+      km_plot <- km_plot +
+      annotation_custom(
+        grob = textGrob(label_vec,
+                        legend_placement[1], y = legend_placement[2],
+                        hjust = 0, gp = gpar(col = "black")),
+        xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
+      )
+    } else if (show_label == "IQR") {
+      label_vec <- paste0( " median ", endpoint, ": ", round(quartiles$q25, 2), " (", round(quartiles$min, 2), " - ", round(quartiles$q75, 2))
+      km_plot <- km_plot +
+        annotation_custom(
+          grob = textGrob(label_vec,
+                          legend_placement[1], y = legend_placement[2],
+                          hjust = 0, gp = gpar(col = "black")),
+          xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
+        )
     } else {
       km_plot
     }
