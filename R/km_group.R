@@ -147,7 +147,7 @@ km_grouped <-
 
     # Assert show_label is a valid option
     assert_character(show_label, any.missing = FALSE, max.len = 1)
-    assertSubset(show_label, choices = c("none", "median", "probability"))
+    assertSubset(show_label, choices = c("none", "median", "probability", "minmax", "IQR"))
 
     # Assertions for text sizes
     lapply(list(text_size_title, text_size),
@@ -223,6 +223,18 @@ formula <- as.formula(paste0("Surv(", time, ", ", event, ") ~ ", group))
       add_censor_mark() +
       add_risktable()
 
+    # calculate median, iqr, minimum and maximum for the estimate
+    quartiles_df <- km_plot$data %>%
+      #group_by(strata) %>%
+      summarise(
+        min = nth(time, 2),
+        max = nth(time, n()),
+        q25 = ifelse(any(estimate <= 0.75), min(time[estimate <= 0.75]), NA),
+        median = ifelse(any(estimate <= 0.5), min(time[estimate <= 0.5]), NA),
+        q75 = ifelse(any(estimate <= 0.25), min(time[estimate <= 0.25]), NA)
+      )
+
+
     if(show_p_values == TRUE) {
       km_plot <- km_plot +
         annotation_custom(
@@ -254,6 +266,28 @@ formula <- as.formula(paste0("Surv(", time, ", ", event, ") ~ ", group))
           values = colors,
           labels = label_vec
         )
+    } else if (show_label == "minmax") {
+
+      label_vec <- c()
+      for (i in seq_len(nrow(quantiles_df))) {
+        label_vec[i] <- paste(surv_prob_table$names[i], " median ", endpoint, ": ", round(quartiles_df$median, 2), " (", round(quartiles_df$min, 2), " - ", round(quartiles_df$max, 2), ")")
+      }
+      km_plot <- km_plot +
+        scale_color_manual(
+          values = colors,
+          labels = label_vec
+        )
+    } else if (show_label == "IQR") {
+      label_vec <- c()
+      for (i in seq_len(nrow(quantiles_df))) {
+        label_vec[i] <- paste(surv_prob_table$names[i], " median ", endpoint, ": ", round(quartiles_df$median, 2), " (", round(quartiles_df$q25, 2), " - ", round(quartiles_df$q75, 2), ")")
+      }
+      km_plot <- km_plot +
+        scale_color_manual(
+          values = colors,
+          labels = label_vec
+        )
+
     } else {
       km_plot <- km_plot +
         scale_color_manual(

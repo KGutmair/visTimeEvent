@@ -201,7 +201,7 @@ km_single <-
         xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
       )
     } else if (show_label == "minmax") {
-      label_vec <- paste0( " median ", endpoint, ": ", round(quartiles$median, 2), " (", round(quartiles$min, 2), " - ", round(quartiles$max, 2))
+      label_vec <- paste0( " median ", endpoint, ": ", round(quartiles$median, 2), " (", round(quartiles$min, 2), " - ", round(quartiles$max, 2), ")")
       km_plot <- km_plot +
       annotation_custom(
         grob = textGrob(label_vec,
@@ -210,7 +210,7 @@ km_single <-
         xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf
       )
     } else if (show_label == "IQR") {
-      label_vec <- paste0( " median ", endpoint, ": ", round(quartiles$q25, 2), " (", round(quartiles$min, 2), " - ", round(quartiles$q75, 2))
+      label_vec <- paste0( " median ", endpoint, ": ", round(quartiles$median, 2), " (", round(quartiles$q25, 2), " - ", round(quartiles$q75, 2), ")")
       km_plot <- km_plot +
         annotation_custom(
           grob = textGrob(label_vec,
