@@ -26,7 +26,8 @@ km_grouped(
   text_size = 12,
   show_p_values = TRUE,
   p_placement = c(0.05, 0.15),
-  legend_placement = c(0.6, 0.2)
+  legend_placement = c(0.6, 0.2),
+  curve_width = 1
 )
 }
 \arguments{

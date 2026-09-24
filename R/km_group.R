@@ -85,7 +85,8 @@ km_grouped <-
            text_size = 12,
            show_p_values = TRUE,
            p_placement = c(0.05, 0.15),
-           legend_placement = c(0.6, 0.2)) {
+           legend_placement = c(0.6, 0.2),
+           curve_width = 1) {
 
 
     # Assert data frame structure
@@ -190,7 +191,7 @@ formula <- as.formula(paste0("Surv(", time, ", ", event, ") ~ ", group))
       survfit2(formula = formula,
                data = data
       ) %>%
-      ggsurvfit() +
+      ggsurvfit(linewidth = curve_width) +
       labs(
         x = x_title,
         y = y_title
@@ -249,7 +250,7 @@ formula <- as.formula(paste0("Surv(", time, ", ", event, ") ~ ", group))
     if (show_label == "probability") {
       label_vec <- c()
       for (i in seq_len(nrow(surv_prob_table))) {
-        label_vec[i] <- paste(surv_prob_table$names[i], time_survival, unit, endpoint, " probability  = ", surv_prob_table$surv_prob[i], sep = " ")
+        label_vec[i] <- paste(surv_prob_table$names[i], time_survival, unit, endpoint, " prob. = ", surv_prob_table$surv_prob[i], sep = " ")
       }
       km_plot <- km_plot +
         scale_color_manual(

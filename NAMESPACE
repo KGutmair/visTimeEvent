@@ -13,20 +13,24 @@ import(grid)
 import(tidycmprsk)
 importFrom(RISCA,ipw.log.rank)
 importFrom(colorRamps,primary.colors)
-importFrom(dplyr,"%>%")
-importFrom(dplyr,bind_rows)
-importFrom(dplyr,filter)
-importFrom(dplyr,group_by)
-importFrom(dplyr,mutate)
-importFrom(dplyr,mutate_at)
-importFrom(dplyr,relocate)
-importFrom(dplyr,rename)
-importFrom(dplyr,select)
+importFrom(dplyr,
+  "%>%",
+  bind_rows,
+  filter,
+  group_by,
+  mutate,
+  mutate_at,
+  relocate,
+  rename,
+  select
+)
 importFrom(ggsurvfit,ggcuminc)
 importFrom(rlang,.data)
 importFrom(scales,percent)
 importFrom(stats,as.formula)
-importFrom(survival,Surv)
-importFrom(survival,survdiff)
-importFrom(survival,survfit)
+importFrom(survival,
+  Surv,
+  survdiff,
+  survfit
+)
 importFrom(tidyr,gather)

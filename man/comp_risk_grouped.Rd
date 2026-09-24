@@ -13,8 +13,7 @@ comp_risk_grouped(
   x_title = waiver(),
   y_title = waiver(),
   time_survival = 1,
-  unit = "months",
-  endpoint = "",
+  timepoint_label = "3-yr Prob.",
   x_lim = NULL,
   y_lim = c(0, 1),
   x_breaks = waiver(),
@@ -25,7 +24,10 @@ comp_risk_grouped(
   text_size = 12,
   p_placement = c(0.05, 0.15),
   legend_placement = c(0.6, 0.8),
-  time_vec_prob = c(1, 2, 3)
+  time_vec_prob = c(1, 2, 3),
+  change_factor = 12,
+  risk_table_element = c("n.risk", "cum.censor", "cum.event"),
+  x_unit = "years"
 )
 }
 \arguments{
@@ -48,11 +50,6 @@ the Kaplan-Meier curves.}
 
 \item{time_survival}{A numeric value representing the time point at which the
 event pobability is calculated. Default is 1.}
-
-\item{unit}{A character string indicating the unit for `time_survival` (e.g., "months").
-Default is "months".}
-
-\item{endpoint}{A character string providing the name of the endpoint.}
 
 \item{x_lim}{A numeric vector of length two defining the limits of the x-axis.}
 
