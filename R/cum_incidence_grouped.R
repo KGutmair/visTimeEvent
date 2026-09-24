@@ -117,22 +117,12 @@ comp_risk_grouped <- function(data,
   #--------------------------------------------------------------
   # Output table for survival probabilities at multiple timepoints
   #-----------------------------------------------------------
-  tab <- surv_object %>%
-    tbl_cuminc(
-      times = time_vec_prob, label_header = "**Months {time}**",
-      outcomes = cr
-    ) %>%
-    add_nevent() %>%
-    add_n() %>%
-    add_nevent(location = c("label", "level")) %>%
-    add_n(location = c("label", "level"))
-
   labels <- paste0("{time} ", x_unit)
-  print(labels)
+
   tab <- surv_object %>%
     tbl_cuminc(
       times = time_vec_prob,
-      label_header = "{time} years",
+      label_header = labels,
       outcomes = cr,
       estimate_fun = function(x) style_number(x, scale = 100, digits = 0)
     ) %>%
@@ -142,16 +132,28 @@ comp_risk_grouped <- function(data,
     add_n(location = c("label", "level"))
 
   tab <- as.data.frame(tab)
-  tab <- tab %>%
-    select(-`**Characteristic**`) %>%
-    rename(
-      `Competing events` = `**Group**`,
-      N = `**N**`,
-      `N Event` = `**N Event**`
-    )
 
-  cols <- 4:ncol(tab)
-  tab[cols] <- lapply(tab[cols], function(x) gsub("\\((\\d+)%?,\\s*(\\d+)%?\\)", "(\\1-\\2)", x))
+  if ("**Group**" %in% names(tab)) {
+    tab <- tab %>%
+      select(-`**Characteristic**`) %>%
+      rename(
+        `Competing events` = `**Group**`,
+        N = `**N**`,
+        `N Event` = `**N Event**`
+      )
+    cols <- 4:ncol(tab)
+    tab[cols] <- lapply(tab[cols], function(x) gsub("\\((\\d+)%?,\\s*(\\d+)%?\\)", "(\\1-\\2)", x))
+  } else {
+    tab <- tab %>%
+      select(-`**Characteristic**`) %>%
+      rename(
+        N = `**N**`,
+        `N Event` = `**N Event**`
+      )
+    cols <- 3:ncol(tab)
+    tab[cols] <- lapply(tab[cols], function(x) gsub("\\((\\d+)%?,\\s*(\\d+)%?\\)", "(\\1-\\2)", x))
+  }
+
 
   tab1 <- flextable(tab) %>%
     bold(j = 1:ncol(tab), part = "header") %>%
