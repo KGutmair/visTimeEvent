@@ -128,10 +128,11 @@ comp_risk_grouped <- function(data,
     add_n(location = c("label", "level"))
 
   labels <- paste0("{time} ", x_unit)
+  print(labels)
   tab <- surv_object %>%
     tbl_cuminc(
       times = time_vec_prob,
-      label_header = labels,
+      label_header = "{time} years",
       outcomes = cr,
       estimate_fun = function(x) style_number(x, scale = 100, digits = 0)
     ) %>%
