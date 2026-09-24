@@ -41,6 +41,7 @@ comp_risk_grouped <- function(data,
                               title = "",
                               x_title = waiver(),
                               y_title = waiver(),
+                              main_outcome,
                               time_survival = 1,
                               timepoint_label = "3-yr Prob.",
                               x_lim = NULL,
@@ -55,8 +56,9 @@ comp_risk_grouped <- function(data,
                               p_placement = c(0.05, 0.15),
                               legend_placement = c(0.6, 0.8),
                               time_vec_prob = c(1, 2, 3),
+                              change_xscale = TRUE,
                               change_factor = 12,
-                              risk_table_element = c("n.risk", "cum.censor", "cum.event"),
+                              risk_table_elements = c("n.risk", "cum.censor", "cum.event"),
                               x_unit = "years") {
   #----------------------------------------------------------
   # Checking input variables
@@ -89,11 +91,12 @@ comp_risk_grouped <- function(data,
   #-----------------------------------------------------
   # Survival probability after a certain timepoint
   #----------------------------------------------------
+  labels <- paste0("{time} ", x_unit)
 
   tbl <-
     surv_object %>%
     tbl_cuminc(
-      times = time_survival, label_header = unit,
+      times = time_survival, label_header = labels,
       outcomes = cr
     )
 
@@ -117,7 +120,6 @@ comp_risk_grouped <- function(data,
   #--------------------------------------------------------------
   # Output table for survival probabilities at multiple timepoints
   #-----------------------------------------------------------
-  labels <- paste0("{time} ", x_unit)
 
   tab <- surv_object %>%
     tbl_cuminc(
@@ -192,7 +194,7 @@ comp_risk_grouped <- function(data,
       breaks = y_breaks
     ) +
     scale_x_continuous(breaks = x_breaks) +
-    theme_minimal() +
+    # theme_minimal() +
     theme(
       plot.title = element_text(
         face = "bold", # makes it bold
@@ -216,7 +218,7 @@ comp_risk_grouped <- function(data,
     add_censor_mark()
 
   if (change_xscale == TRUE) {
-    cuminc_plot <- cuminc_plot %>%
+    cuminc_plot <- cuminc_plot +
       scale_x_continuous(
         breaks = x_breaks,
         labels = function(x) round(x / change_factor)
@@ -254,11 +256,92 @@ comp_risk_grouped <- function(data,
   }
 
 
+  #------------------------------------------------------------------------------------
+  # adding the ARD: cave: this is just for the main outcome, not for the competing event
+  #------------------------------------------------------------------------------------
+  cumprob_tidy <- surv_object$tidy
+
+  arm_levels <- levels(data[[group]])
+
+  cumprob_tidy <- cumprob_tidy %>%
+    filter(outcome == main_outcome) %>%
+    select(time, strata, estimate, std.error) %>%
+    mutate(strata = factor(strata, levels = arm_levels))
+
+  # I need common timepoints for both groups
+  # --- 2. Helper: build step functions per stratum ---
+  # KM curves start at S(0) = 1, so we prepend time = 0 with estimate = 1, se = 0
+  build_stepfun <- function(df, value_col) {
+    df <- df %>% arrange(time)
+    times <- c(0, df$time)
+    values <- c(1, df[[value_col]])
+    if (value_col == "std.error") values[1] <- 0
+    stepfun(times[-1], values, right = FALSE)
+  }
+
+  # --- 3. Split by strata ---
+  df1 <- filter(cumprob_tidy, strata == arm_levels[1])
+  df2 <- filter(cumprob_tidy, strata == arm_levels[2])
+
+  est_fun1 <- build_stepfun(df1, "estimate")
+  est_fun2 <- build_stepfun(df2, "estimate")
+  se_fun1 <- build_stepfun(df1, "std.error")
+  se_fun2 <- build_stepfun(df2, "std.error")
+
+  # --- 4. Union of all time points (this "unifies" the time axis) ---
+  all_times <- sort(unique(c(0, df1$time, df2$time)))
+
+  # --- 5. Build the wide comparison table ---
+  ard_df <- tibble(time = all_times) %>%
+    mutate(
+      estimate_1  = est_fun1(time),
+      estimate_2  = est_fun2(time),
+      se_1        = se_fun1(time),
+      se_2        = se_fun2(time),
+      diff        = estimate_1 - estimate_2,
+      se_diff     = sqrt(se_1^2 + se_2^2), # independent strata -> variances add
+      ci_lower    = diff - qnorm(0.975) * se_diff,
+      ci_upper    = diff + qnorm(0.975) * se_diff
+    ) %>%
+    rename_with(~ paste0(., "_", arm_levels[1]), c(estimate_1, se_1)) %>%
+    rename_with(~ paste0(., "_", arm_levels[2]), c(estimate_2, se_2))
+
+
+  #------------------------------------------------
+  # Extract the difference at xy time
+  #-----------------------------------------------
+  ard_diff_table <- map_dfr(time_vec_prob, function(t) {
+    ard_df %>%
+      arrange(time) %>%
+      filter(time <= t) %>%
+      filter(time == max(time)) %>%
+      slice(1) %>% # in case of ties at the same max time
+      mutate(
+        timepoint = t,
+        surv_prob = paste0(
+          round(diff * 100), "% (",
+          round(ci_lower * 100), "-",
+          round(ci_upper * 100), ")"
+        )
+      ) %>%
+      select(timepoint, time_used = time, diff, ci_lower, ci_upper, surv_prob)
+  })
+
+  ard_diff_table <- ard_diff_table %>%
+    mutate(
+      NNT = 1 / diff,
+      NNT_LCI = min(1 / ci_upper, 1 / ci_lower),
+      NNT_UCI = max(1 / ci_upper, 1 / ci_lower),
+      NNT_CI = paste0(round(NNT), " (", round(NNT_LCI), "-", round(NNT_UCI), ")")
+    )
+
+
   res_list <- list(
     "plot" = cuminc_plot,
     "probabilities" = table_surv_prob,
     "median" = median_table,
-    "all_probabilities" = tab1
+    "all_probabilities" = tab1,
+    "ARD" = ard_diff_table
   )
   res_list
 }
